@@ -1,0 +1,2787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas Personales V2.0 - Fidel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+  :root {
+    --primary: #2563eb; --primary-light: #dbeafe; --primary-dark: #1d4ed8;
+    --success: #059669; --success-light: #d1fae5;
+    --warning: #d97706; --warning-light: #fef3c7;
+    --danger: #dc2626; --danger-light: #fee2e2;
+    --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+    --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+    --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+    --sidebar-width: 240px;
+  }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width); background: #1e293b; color: white; padding: 0; overflow-y: auto; z-index: 100; transition: transform 0.3s; }
+  .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-header h1 { font-size: 18px; font-weight: 700; }
+  .sidebar-header p { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; transition: all 0.2s; font-size: 14px; color: var(--gray-300); border-left: 3px solid transparent; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+  .nav-item.active { background: rgba(37,99,235,0.2); color: white; border-left-color: var(--primary); }
+  .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .nav-section { padding: 12px 20px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); font-weight: 600; }
+  .main { margin-left: var(--sidebar-width); padding: 24px; min-height: 100vh; }
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-size: 24px; font-weight: 700; color: var(--gray-800); }
+  .page-header p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+  .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-title { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-outline { background: transparent; border: 1px solid var(--gray-300); color: var(--gray-700); }
+  .btn-outline:hover { background: var(--gray-50); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px; border-radius: 6px; background: none; border: none; cursor: pointer; color: var(--gray-400); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+  .btn-icon:hover { color: var(--gray-700); background: var(--gray-100); }
+  .btn-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .month-selector button { background: none; border: 1px solid var(--gray-300); border-radius: 6px; padding: 6px 10px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+  .month-selector button svg { width: 16px; height: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; padding: 10px 12px; font-weight: 600; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); }
+  tbody tr:hover { background: var(--gray-50); }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 4px; }
+  .form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color 0.2s; outline: none; }
+  .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  .form-row { display: grid; gap: 12px; }
+  .form-row-2 { grid-template-columns: 1fr 1fr; }
+  .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-size: 18px; font-weight: 600; }
+  .badge { display: inline-flex; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .badge-blue { background: var(--primary-light); color: var(--primary); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-yellow { background: var(--warning-light); color: var(--warning); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .stat-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--gray-800); }
+  .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .progress-bar { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .empty-state { text-align: center; padding: 40px; color: var(--gray-400); }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .checkbox { width: 16px; height: 16px; accent-color: var(--primary); }
+  .month-selector { display: flex; align-items: center; gap: 12px; }
+  .month-selector span { font-weight: 600; font-size: 15px; min-width: 140px; text-align: center; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--gray-200); }
+  .tab { padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--gray-500); transition: all 0.2s; }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .currency-cop { color: var(--primary); }
+  .currency-usd { color: var(--success); }
+  .accordion { border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .accordion-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: white; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .accordion-header:hover { background: var(--gray-50); }
+  .accordion-body { border-top: 1px solid var(--gray-200); background: var(--gray-50); }
+  .accordion-chevron { margin-left: auto; transition: transform 0.2s; color: var(--gray-400); display:flex;align-items:center; }
+  .accordion-chevron.open { transform: rotate(180deg); }
+  .accordion-chevron svg { width: 16px; height: 16px; }
+  .cc-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .cc-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--gray-100); }
+  .cc-row-locked { background: #fffbeb; }
+  .cc-row-locked td { color: var(--gray-600); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-800); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; z-index: 2000; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .form-row-2, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, createContext, useContext } = React;
+
+// ============ DATA LAYER ============
+const STORAGE_KEY = 'finanzas_personales_v2';
+
+const defaultData = {
+  accounts: [
+    { id: '1', name: 'Cuenta Principal COP', bank: 'Bancolombia', currency: 'COP', type: 'checking', active: true, parentId: null, color: '#2563eb' },
+    { id: '2', name: 'Cuenta USD', bank: 'Bancolombia', currency: 'USD', type: 'checking', active: true, parentId: null, color: '#10b981' },
+    { id: '3', name: 'Efectivo COP', bank: 'Efectivo', currency: 'COP', type: 'cash', active: true, parentId: null, color: '#f59e0b' },
+  ],
+  expenseCategories: [
+    { id: '1', name: 'Vivienda', icon: '🏠' },
+    { id: '2', name: 'Alimentación', icon: '🛒' },
+    { id: '3', name: 'Transporte', icon: '🚗' },
+    { id: '4', name: 'Servicios', icon: '💡' },
+    { id: '5', name: 'Salud', icon: '🏥' },
+    { id: '6', name: 'Entretenimiento', icon: '🎬' },
+    { id: '7', name: 'Personal', icon: '👤' },
+    { id: '8', name: 'Seguros', icon: '🛡' },
+    { id: '9', name: 'Educación', icon: '📚' },
+    { id: '10', name: 'Otros', icon: '📋' },
+  ],
+  incomeSources: [
+    { id: '1', name: 'Salario Principal' },
+    { id: '2', name: 'Ingreso Secundario' },
+  ],
+  exchangeRates: [{ from: 'USD', to: 'COP', rate: 4200, date: '2026-03-27' }],
+  creditCards: [],
+  budgetGroups: [],
+  ccBudgetAssignments: [],
+  income: [],
+  budget: [],
+  expenses: [],
+  creditCard: [],
+  debts: [],
+  loansGiven: [],
+  savingsGoals: [],
+  investments: [],
+  spouseReconciliation: [],
+  accountBalances: [],
+  budgetNotes: {},
+};
+
+function loadData() {
+  try {
+    // Intentar cargar de V2 primero
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) {
+      const parsed = JSON.parse(d);
+      return { ...defaultData, ...parsed };
+    }
+    // Fallback: migrar datos de V1 automáticamente
+    const v1 = localStorage.getItem('finanzas_personales_v1');
+    if (v1) {
+      const parsed = JSON.parse(v1);
+      const migrated = { ...defaultData, ...parsed };
+      // Asegurar que las cuentas tengan color si vienen de V1
+      if (migrated.accounts) {
+        const COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+        migrated.accounts = migrated.accounts.map((a, i) => ({
+          ...a,
+          color: a.color || COLORS[i % COLORS.length]
+        }));
+      }
+      // Guardar en V2 para futuras cargas
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      console.log('Datos migrados de V1 a V2 exitosamente');
+      return migrated;
+    }
+  } catch(e) { console.error('Error loading data', e); }
+  return { ...defaultData };
+}
+
+function saveData(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) { console.error('Error saving', e); }
+}
+
+// ============ CONTEXT ============
+const AppContext = createContext();
+const useApp = () => useContext(AppContext);
+
+// ============ UTILS ============
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const getMonthKey = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const formatMonthLabel = (key) => { const [y,m] = key.split('-'); return `${monthNames[parseInt(m)-1]} ${y}`; };
+// Format number only (no currency symbol)
+const fmtNum = (amount, currency='COP') => {
+  if (currency === 'COP') return new Intl.NumberFormat('es-CO', { minimumFractionDigits:0, maximumFractionDigits:0 }).format(amount);
+  if (currency === 'USD') return new Intl.NumberFormat('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(amount);
+  return new Intl.NumberFormat('es-CO', { minimumFractionDigits:2 }).format(amount);
+};
+// Format with currency code as smaller label — returns JSX
+const fmt = (amount, currency='COP') => {
+  return React.createElement('span', {style:{display:'inline-flex',alignItems:'baseline',gap:3}},
+    React.createElement('span', {style:{fontSize:'0.72em',fontWeight:500,opacity:0.55,letterSpacing:'0.02em'}}, currency),
+    React.createElement('span', null, fmtNum(amount, currency))
+  );
+};
+// Plain string version for titles, tooltips etc
+const fmtStr = (amount, currency='COP') => `${currency} ${fmtNum(amount, currency)}`;
+// Multi-currency helpers
+function sumByCurrency(items, getAmt, getCur) {
+  const t = {};
+  items.forEach(i => { const c = getCur(i)||'COP'; t[c] = (t[c]||0) + (getAmt(i)||0); });
+  return t;
+}
+function addCBags(...bags) {
+  const r = {};
+  bags.forEach(b => Object.entries(b).forEach(([c,v]) => { r[c] = (r[c]||0) + v; }));
+  return r;
+}
+function subtractCBags(a, b) {
+  const r = { ...a };
+  Object.entries(b).forEach(([c,v]) => { r[c] = (r[c]||0) - v; });
+  return r;
+}
+function FmtMulti({ totals, style, separator }) {
+  const entries = Object.entries(totals).filter(([,v]) => v !== 0);
+  if (entries.length === 0) return React.createElement('span', {style}, fmt(0));
+  if (entries.length === 1) return React.createElement('span', {style}, fmt(entries[0][1], entries[0][0]));
+  const sep = separator || '·';
+  return React.createElement('span', {style:{display:'inline-flex',alignItems:'baseline',flexWrap:'wrap',gap:2,...(style||{})}}, entries.map(([c,v], i) =>
+    React.createElement(React.Fragment, {key:c}, i > 0 && React.createElement('span', {style:{color:'var(--gray-300)',margin:'0 3px'}}, sep), fmt(v, c))
+  ));
+}
+const today = () => new Date().toISOString().slice(0,10);
+const currentMonthKey = () => getMonthKey(new Date());
+
+// ============ ICONS (inline SVG) ============
+const Icons = {
+  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  income: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  budget: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>,
+  expense: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="M9 9h6v6"/></svg>,
+  creditcard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>,
+  loan: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  config: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+  plus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+  edit: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
+  trash: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+  close: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+  check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  chevLeft: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
+  chevRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+  download: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+};
+const chevDown = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>;
+
+// ============ REUSABLE COMPONENTS ============
+function Modal({ open, onClose, title, children }) {
+  if (!open) return null;
+  return ReactDOM.createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <span className="modal-title">{title}</span>
+          <button className="btn-icon" onClick={onClose}>{Icons.close}</button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function MonthSelector({ month, onChange }) {
+  const shift = (dir) => {
+    const [y,m] = month.split('-').map(Number);
+    const d = new Date(y, m-1+dir, 1);
+    onChange(getMonthKey(d));
+  };
+  return (
+    <div className="month-selector">
+      <button onClick={() => shift(-1)}>{Icons.chevLeft}</button>
+      <span>{formatMonthLabel(month)}</span>
+      <button onClick={() => shift(1)}>{Icons.chevRight}</button>
+    </div>
+  );
+}
+
+function EmptyState({ message }) {
+  return <div className="empty-state"><p>{message}</p></div>;
+}
+
+function Toast({ message }) {
+  if (!message) return null;
+  return <div className="toast">{message}</div>;
+}
+
+function ConfirmDialog({ open, message, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
+        <p style={{marginBottom:16,fontSize:14}}>{message}</p>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+          <button className="btn btn-outline" onClick={onCancel}>Cancelar</button>
+          <button className="btn btn-danger" onClick={onConfirm}>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ CONFIG PAGE ============
+function ConfigPage() {
+  const { data, updateData, showToast } = useApp();
+  const [tab, setTab] = useState('accounts');
+  const [modal, setModal] = useState(null); // { type, item? }
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  // ACCOUNTS
+  function AccountForm({ item, onSave, onClose }) {
+    const [form, setForm] = useState(item || { name:'', bank:'', currency:'COP', type:'checking', active:true, parentId:null, color: ACCOUNT_COLORS[0] });
+    const set = (k,v) => setForm({...form,[k]:v});
+    const parentAccounts = data.accounts.filter(a => !a.parentId && a.id !== item?.id);
+    return (
+      <div>
+        <div className="form-group"><label className="form-label">Nombre</label><input className="form-input" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ej: Cuenta de Ahorros Bancolombia"/></div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Banco / Origen</label><input className="form-input" value={form.bank} onChange={e=>set('bank',e.target.value)} placeholder="Ej: Bancolombia"/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP - Peso Colombiano</option><option value="USD">USD - Dólar</option><option value="EUR">EUR - Euro</option><option value="BRL">BRL - Real</option></select></div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Tipo</label><select className="form-input" value={form.type} onChange={e=>set('type',e.target.value)}><option value="checking">Cuenta Corriente</option><option value="savings">Cuenta de Ahorros</option><option value="cash">Efectivo</option><option value="pocket">Bolsillo / Cajita</option><option value="credit">Tarjeta de Crédito</option></select></div>
+          <div className="form-group"><label className="form-label">Cuenta padre (si es bolsillo)</label><select className="form-input" value={form.parentId||''} onChange={e=>set('parentId',e.target.value||null)}><option value="">— Ninguna (cuenta principal) —</option>{parentAccounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+        </div>
+        <div className="form-group"><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type="checkbox" className="checkbox" checked={form.active} onChange={e=>set('active',e.target.checked)}/> Cuenta activa</label></div>
+        <div className="form-group"><label className="form-label">Color</label>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {ACCOUNT_COLORS.map(c=><button key={c} type="button" onClick={()=>set('color',c)} style={{width:28,height:28,borderRadius:'50%',background:c,border:form.color===c?'3px solid #1f2937':'3px solid transparent',cursor:'pointer'}}/>)}
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={()=>{if(!form.name.trim())return;onSave(form);}} disabled={!form.name.trim()}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function CategoryForm({ item, onSave, onClose }) {
+    const [form, setForm] = useState(item || { name:'', icon:'📋' });
+    const emojis = ['🏠','🛒','🚗','💡','🏥','🎬','👤','🛡','📚','✈️','🎁','📋','💰','🍽','👶','🐕','💻','📱','🏋️','🎵'];
+    return (
+      <div>
+        <div className="form-group"><label className="form-label">Nombre de categoría</label><input className="form-input" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Ej: Mercado"/></div>
+        <div className="form-group"><label className="form-label">Icono</label>
+          <div style={{display:'flex',flexWrap:'wrap',gap:4}}>{emojis.map(e=><button key={e} onClick={()=>setForm({...form,icon:e})} style={{padding:'6px 8px',borderRadius:6,border:form.icon===e?'2px solid var(--primary)':'2px solid transparent',background:form.icon===e?'var(--primary-light)':'var(--gray-100)',cursor:'pointer',fontSize:18}}>{e}</button>)}</div>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={()=>{if(!form.name.trim())return;onSave(form);}}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function IncomeSourceForm({ item, onSave, onClose }) {
+    const [form, setForm] = useState(item || { name:'' });
+    return (
+      <div>
+        <div className="form-group"><label className="form-label">Nombre de la fuente</label><input className="form-input" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Ej: Freelance"/></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={()=>{if(!form.name.trim())return;onSave(form);}}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function ExchangeRateForm({ onClose }) {
+    const [rates, setRates] = useState(data.exchangeRates || []);
+    const addRate = () => setRates([...rates, { from:'USD', to:'COP', rate:0, date:today() }]);
+    const updateRate = (i,k,v) => { const r=[...rates]; r[i]={...r[i],[k]:v}; setRates(r); };
+    const removeRate = (i) => setRates(rates.filter((_,j)=>j!==i));
+    return (
+      <div>
+        {rates.map((r,i) => (
+          <div key={i} className="form-row form-row-4" style={{alignItems:'end',marginBottom:8}}>
+            <div className="form-group"><label className="form-label">De</label><input className="form-input" value={r.from} onChange={e=>updateRate(i,'from',e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">A</label><input className="form-input" value={r.to} onChange={e=>updateRate(i,'to',e.target.value)}/></div>
+            <div className="form-group"><label className="form-label">Tasa</label><input className="form-input" type="number" value={r.rate} onChange={e=>updateRate(i,'rate',parseFloat(e.target.value)||0)}/></div>
+            <button className="btn-icon" onClick={()=>removeRate(i)} style={{marginBottom:14}}>{Icons.trash}</button>
+          </div>
+        ))}
+        <button className="btn btn-outline btn-sm" onClick={addRate} style={{marginBottom:16}}>+ Agregar tasa</button>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={()=>{updateData({exchangeRates:rates});showToast('Tasas actualizadas');onClose();}}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  const saveItem = (collection, item, oldItem) => {
+    let items = [...data[collection]];
+    if (oldItem) { items = items.map(i => i.id === oldItem.id ? { ...oldItem, ...item } : i); }
+    else { items.push({ ...item, id: uid() }); }
+    updateData({ [collection]: items });
+    showToast(oldItem ? 'Actualizado' : 'Creado');
+    setModal(null);
+  };
+
+  const deleteItem = (collection, id) => {
+    updateData({ [collection]: data[collection].filter(i => i.id !== id) });
+    showToast('Eliminado');
+    setConfirmDel(null);
+  };
+
+  const renderAccounts = () => (
+    <div>
+      <div className="card-header">
+        <span className="card-title">Cuentas bancarias, efectivo y bolsillos</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'account'})}>{Icons.plus} Nueva cuenta</button>
+      </div>
+      {data.accounts.length === 0 ? <EmptyState message="No hay cuentas configuradas" /> :
+      <table><thead><tr><th>Nombre</th><th>Banco</th><th>Moneda</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>{data.accounts.filter(a=>!a.parentId).map(a => (
+        <React.Fragment key={a.id}>
+        <tr>
+          <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="cc-dot" style={{background:a.color||'#6366f1'}}/><span style={{fontWeight:500}}>{a.name}</span></div></td>
+          <td>{a.bank}</td>
+          <td><span className={`badge ${a.currency==='COP'?'badge-blue':'badge-green'}`}>{a.currency}</span></td>
+          <td style={{fontSize:12}}>{({checking:'Corriente',savings:'Ahorros',cash:'Efectivo',pocket:'Bolsillo',credit:'Tarjeta'})[a.type]}</td>
+          <td>{a.active ? <span className="badge badge-green">Activa</span> : <span className="badge badge-yellow">Inactiva</span>}</td>
+          <td style={{display:'flex',gap:4}}>
+            <button className="btn-icon" onClick={()=>setModal({type:'account',item:a})}>{Icons.edit}</button>
+            <button className="btn-icon" onClick={()=>setConfirmDel({collection:'accounts',id:a.id,msg:`¿Eliminar "${a.name}"?`})}>{Icons.trash}</button>
+          </td>
+        </tr>
+        {data.accounts.filter(p=>p.parentId===a.id).map(pocket => (
+          <tr key={pocket.id} style={{background:'var(--gray-50)'}}>
+            <td style={{paddingLeft:32,fontSize:13}}>↳ {pocket.name}</td>
+            <td>{pocket.bank}</td>
+            <td><span className={`badge ${pocket.currency==='COP'?'badge-blue':'badge-green'}`}>{pocket.currency}</span></td>
+            <td style={{fontSize:12}}>Bolsillo</td>
+            <td>{pocket.active ? <span className="badge badge-green">Activa</span> : <span className="badge badge-yellow">Inactiva</span>}</td>
+            <td style={{display:'flex',gap:4}}>
+              <button className="btn-icon" onClick={()=>setModal({type:'account',item:pocket})}>{Icons.edit}</button>
+              <button className="btn-icon" onClick={()=>setConfirmDel({collection:'accounts',id:pocket.id,msg:`¿Eliminar "${pocket.name}"?`})}>{Icons.trash}</button>
+            </td>
+          </tr>
+        ))}
+        </React.Fragment>
+      ))}</tbody></table>}
+    </div>
+  );
+
+  const renderCategories = () => (
+    <div>
+      <div className="card-header">
+        <span className="card-title">Categorías de gasto</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'category'})}>{Icons.plus} Nueva categoría</button>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+        {data.expenseCategories.map(c => (
+          <div key={c.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--gray-50)',borderRadius:8,fontSize:13}}>
+            <span>{c.icon}</span><span style={{fontWeight:500}}>{c.name}</span>
+            <button className="btn-icon" style={{padding:2}} onClick={()=>setModal({type:'category',item:c})}>{Icons.edit}</button>
+            <button className="btn-icon" style={{padding:2}} onClick={()=>setConfirmDel({collection:'expenseCategories',id:c.id,msg:`¿Eliminar categoría "${c.name}"?`})}>{Icons.trash}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const ACCOUNT_COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+    const CC_COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+
+  function CreditCardEntityForm({ item, onClose }) {
+    const [form, setForm] = useState(item || { name:'', bank:'', lastFour:'', color: CC_COLORS[0], currency:'COP', monthlyInterestRate:0, active:true });
+    const set = (k,v) => setForm({...form,[k]:v});
+    const save = () => {
+      if (!form.name.trim()) return;
+      if (item) { updateData({ creditCards: data.creditCards.map(c => c.id===item.id ? {...item,...form} : c) }); }
+      else { updateData({ creditCards: [...data.creditCards, {...form, id:uid()}] }); }
+      showToast(item ? 'Tarjeta actualizada' : 'Tarjeta creada');
+      setModal(null);
+    };
+    return (
+      <div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Nombre de la tarjeta</label><input className="form-input" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ej: Visa Bancolombia"/></div>
+          <div className="form-group"><label className="form-label">Banco</label><input className="form-input" value={form.bank} onChange={e=>set('bank',e.target.value)} placeholder="Ej: Bancolombia"/></div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Últimos 4 dígitos</label><input className="form-input" value={form.lastFour} onChange={e=>set('lastFour',e.target.value)} maxLength={4} placeholder="1234"/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP</option><option value="USD">USD</option></select></div>
+        </div>
+        <div className="form-group"><label className="form-label">Color</label>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {CC_COLORS.map(c=><button key={c} type="button" onClick={()=>set('color',c)} style={{width:28,height:28,borderRadius:'50%',background:c,border:form.color===c?'3px solid #1f2937':'3px solid transparent',cursor:'pointer'}}/>)}
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Interés mensual por defecto (%)</label>
+          <input className="form-input" type="number" step="0.01" min="0" value={form.monthlyInterestRate||0} onChange={e=>set('monthlyInterestRate',parseFloat(e.target.value)||0)} placeholder="0"/>
+          <span style={{fontSize:11,color:'var(--gray-400)',marginTop:3,display:'block'}}>Se aplica por defecto a compras a cuotas. Suscripciones y diferidos usan 0%.</span>
+        </div>
+        <div className="form-group"><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type="checkbox" className="checkbox" checked={form.active} onChange={e=>set('active',e.target.checked)}/> Tarjeta activa</label></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  const renderCreditCards = () => (
+    <div>
+      <div className="card-header">
+        <span className="card-title">Tarjetas</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'creditCardEntity'})}>{Icons.plus} Nueva tarjeta</button>
+      </div>
+      {data.creditCards.length === 0 ? <EmptyState message="No hay tarjetas configuradas"/> :
+      <table><thead><tr><th>Tarjeta</th><th>Banco</th><th>Últimos 4</th><th>Moneda</th><th>Interés</th><th>Estado</th><th></th></tr></thead>
+      <tbody>{data.creditCards.map(c=>(
+        <tr key={c.id}>
+          <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="cc-dot" style={{background:c.color}}/><span style={{fontWeight:500}}>{c.name}</span></div></td>
+          <td>{c.bank}</td>
+          <td style={{fontFamily:'monospace'}}>••••{c.lastFour}</td>
+          <td><span className={`badge ${c.currency==='COP'?'badge-blue':'badge-green'}`}>{c.currency}</span></td>
+          <td style={{fontSize:12}}>{(c.monthlyInterestRate||0)}%</td>
+          <td>{c.active ? <span className="badge badge-green">Activa</span> : <span className="badge badge-yellow">Inactiva</span>}</td>
+          <td style={{display:'flex',gap:4}}>
+            <button className="btn-icon" onClick={()=>setModal({type:'creditCardEntity',item:c})}>{Icons.edit}</button>
+            <button className="btn-icon" onClick={()=>setConfirmDel({collection:'creditCards',id:c.id,msg:`¿Eliminar tarjeta "${c.name}"?`})}>{Icons.trash}</button>
+          </td>
+        </tr>
+      ))}</tbody></table>}
+    </div>
+  );
+
+  const renderIncomeSources = () => (
+    <div>
+      <div className="card-header">
+        <span className="card-title">Fuentes de ingreso</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'incomeSource'})}>{Icons.plus} Nueva fuente</button>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+        {data.incomeSources.map(s => (
+          <div key={s.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--gray-50)',borderRadius:8,fontSize:13}}>
+            <span style={{fontWeight:500}}>{s.name}</span>
+            <button className="btn-icon" style={{padding:2}} onClick={()=>setModal({type:'incomeSource',item:s})}>{Icons.edit}</button>
+            <button className="btn-icon" style={{padding:2}} onClick={()=>setConfirmDel({collection:'incomeSources',id:s.id,msg:`¿Eliminar fuente "${s.name}"?`})}>{Icons.trash}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="page-header"><h2>Configuración</h2><p>Administra tus cuentas, categorías y preferencias</p></div>
+      <div className="tabs">
+        {[['accounts','Cuentas'],['cards','Tarjetas'],['categories','Categorías'],['sources','Fuentes de ingreso'],['rates','Tasas de cambio']].map(([k,l])=>(
+          <div key={k} className={`tab ${tab===k?'active':''}`} onClick={()=>setTab(k)}>{l}</div>
+        ))}
+      </div>
+      <div className="card">
+        {tab === 'accounts' && renderAccounts()}
+        {tab === 'cards' && renderCreditCards()}
+        {tab === 'categories' && renderCategories()}
+        {tab === 'sources' && renderIncomeSources()}
+        {tab === 'rates' && <ExchangeRateForm onClose={()=>{}}/>}
+      </div>
+      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal?.item ? 'Editar' : 'Nuevo'}>
+        {modal?.type === 'account' && <AccountForm item={modal.item} onSave={(f)=>saveItem('accounts',f,modal.item)} onClose={()=>setModal(null)}/>}
+        {modal?.type === 'category' && <CategoryForm item={modal.item} onSave={(f)=>saveItem('expenseCategories',f,modal.item)} onClose={()=>setModal(null)}/>}
+        {modal?.type === 'incomeSource' && <IncomeSourceForm item={modal.item} onSave={(f)=>saveItem('incomeSources',f,modal.item)} onClose={()=>setModal(null)}/>}
+        {modal?.type === 'creditCardEntity' && <CreditCardEntityForm item={modal.item} onClose={()=>setModal(null)}/>}
+      </Modal>
+      <ConfirmDialog open={!!confirmDel} message={confirmDel?.msg} onConfirm={()=>deleteItem(confirmDel.collection,confirmDel.id)} onCancel={()=>setConfirmDel(null)}/>
+    </div>
+  );
+}
+
+// ============ INCOME PAGE ============
+function IncomePage() {
+  const { data, updateData, showToast } = useApp();
+  const [month, setMonth] = useState(currentMonthKey());
+  const [modal, setModal] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [confirmCopy, setConfirmCopy] = useState(null);
+  const items = data.income.filter(i => i.month === month);
+
+  // Estado select (Planificado + cuentas, sin Ejecutado)
+  const incomeEstadoStyle = (val) => {
+    if (!val) return { background:'#ffffff', color:'var(--gray-600)', border:'1px solid var(--gray-200)' };
+    return { background:'#fef9c3', color:'#92400e', border:'1px solid #fde68a' };
+  };
+  const IncomeEstadoSelect = ({ value, onChange }) => (
+    <select
+      style={{fontSize:12,padding:'2px 8px',borderRadius:6,cursor:'pointer',maxWidth:160,fontWeight:500,...incomeEstadoStyle(value||'')}}
+      value={value||''}
+      onChange={e=>onChange(e.target.value||null)}
+    >
+      <option value="">Planificado</option>
+      {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+    </select>
+  );
+
+  // Copiar mes anterior (todos los ingresos, reseteados a Planificado, reemplaza mes actual)
+  const applyIncomeCopy = ({ prevItems }) => {
+    const incomeWithoutCurrent = data.income.filter(i => i.month !== month);
+    // Reset accountId a null → estado Planificado en todos los ingresos copiados
+    updateData({ income: [...incomeWithoutCurrent, ...prevItems.map(i=>({...i, id:uid(), month, accountId:null}))] });
+    const n = prevItems.length;
+    showToast(`${n} ingreso${n!==1?'s':''} copiado${n!==1?'s':''}`);
+    setConfirmCopy(null);
+  };
+  const copyPrevMonth = () => {
+    const [y,m] = month.split('-').map(Number);
+    const prev = getMonthKey(new Date(y, m-2, 1));
+    const prevItems = data.income.filter(i => i.month === prev);
+    if (!prevItems.length) { showToast('No hay ingresos en el mes anterior'); return; }
+    const pending = { prevItems };
+    if (items.length > 0) { setConfirmCopy(pending); }
+    else { applyIncomeCopy(pending); }
+  };
+
+  function IncomeForm({ item, onClose }) {
+    const [form, setForm] = useState(item || { date: today(), sourceId: data.incomeSources[0]?.id||'', amount: '', currency: 'COP', accountId: '', isRenta: true, month, notes: '' });
+    const set = (k,v) => setForm({...form,[k]:v});
+    const save = () => {
+      if (!form.amount) return;
+      const entry = { ...form, amount: parseFloat(form.amount), accountId: form.accountId||null };
+      if (item) { updateData({ income: data.income.map(i => i.id === item.id ? { ...item, ...entry } : i) }); }
+      else { updateData({ income: [...data.income, { ...entry, id: uid() }] }); }
+      showToast(item ? 'Ingreso actualizado' : 'Ingreso registrado');
+      onClose();
+    };
+    return (
+      <div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Fecha</label><input className="form-input" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Fuente</label><select className="form-input" value={form.sourceId} onChange={e=>set('sourceId',e.target.value)}>{data.incomeSources.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        </div>
+        <div className="form-row form-row-3">
+          <div className="form-group"><label className="form-label">Monto</label><input className="form-input" type="number" value={form.amount} onChange={e=>set('amount',e.target.value)} placeholder="0"/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+          <div className="form-group"><label className="form-label">Cuenta destino (opcional)</label><select className="form-input" value={form.accountId||''} onChange={e=>set('accountId',e.target.value||null)}><option value="">Sin asignar</option>{data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+        </div>
+        <div className="form-group"><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type="checkbox" className="checkbox" checked={form.isRenta} onChange={e=>set('isRenta',e.target.checked)}/> Constitutivo de renta (ingreso real)</label></div>
+        <div className="form-group"><label className="form-label">Notas</label><input className="form-input" value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Ej: Pago primera quincena"/></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalRentaBag = sumByCurrency(items.filter(i=>i.isRenta), i=>i.amount, i=>i.currency);
+  const totalNoRentaBag = sumByCurrency(items.filter(i=>!i.isRenta), i=>i.amount, i=>i.currency);
+  const totalAllIncomeBag = addCBags(totalRentaBag, totalNoRentaBag);
+  const getSourceName = (id) => data.incomeSources.find(s=>s.id===id)?.name || '—';
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+        <div><h2>Ingresos</h2><p>Registro de ingresos mensuales</p></div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-outline" onClick={copyPrevMonth}>Copiar mes anterior</button>
+          <button className="btn btn-primary" onClick={()=>setModal({item:null})}>{Icons.plus} Registrar ingreso</button>
+        </div>
+      </div>
+      <MonthSelector month={month} onChange={setMonth}/>
+      <div className="stat-grid" style={{marginTop:16}}>
+        <div className="stat-card"><div className="stat-label">Ingresos (Renta)</div><div className="stat-value" style={{color:'var(--success)'}}><FmtMulti totals={totalRentaBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Otros ingresos (No renta)</div><div className="stat-value" style={{color:'var(--gray-500)'}}><FmtMulti totals={totalNoRentaBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Total recibido</div><div className="stat-value"><FmtMulti totals={totalAllIncomeBag}/></div></div>
+      </div>
+      <div className="card">
+        {items.length === 0 ? <EmptyState message="No hay ingresos registrados este mes"/> :
+        <table><thead><tr><th>Fecha</th><th>Fuente</th><th>Monto</th><th>Cuenta</th><th>Renta</th><th>Notas</th><th></th></tr></thead>
+        <tbody>{items.sort((a,b)=>a.date.localeCompare(b.date)).map(i=>(
+          <tr key={i.id}>
+            <td>{i.date}</td>
+            <td style={{fontWeight:500}}>{getSourceName(i.sourceId)}</td>
+            <td style={{fontWeight:600}}>{fmt(i.amount, i.currency)}</td>
+            <td><IncomeEstadoSelect value={i.accountId} onChange={v=>updateData({income:data.income.map(x=>x.id===i.id?{...x,accountId:v}:x)})}/></td>
+            <td>{i.isRenta ? <span className="badge badge-green">Renta</span> : <span className="badge badge-yellow">No renta</span>}</td>
+            <td style={{color:'var(--gray-500)',fontSize:12}}>{i.notes}</td>
+            <td style={{display:'flex',gap:4}}>
+              <button className="btn-icon" onClick={()=>setModal({item:i})}>{Icons.edit}</button>
+              <button className="btn-icon" onClick={()=>setConfirmDel(i)}>{Icons.trash}</button>
+            </td>
+          </tr>
+        ))}</tbody></table>}
+      </div>
+      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal?.item?.id ? 'Editar ingreso' : 'Registrar ingreso'}>
+        {modal && <IncomeForm item={modal.item} onClose={()=>setModal(null)}/>}
+      </Modal>
+      <ConfirmDialog open={!!confirmDel} message="¿Eliminar este ingreso?" onConfirm={()=>{updateData({income:data.income.filter(i=>i.id!==confirmDel.id)});showToast('Eliminado');setConfirmDel(null);}} onCancel={()=>setConfirmDel(null)}/>
+      <ConfirmDialog
+        open={!!confirmCopy}
+        message={`El mes actual ya tiene ${items.length} ingreso${items.length!==1?'s':''} registrado${items.length!==1?'s':''}. Al copiar del mes anterior estos serán reemplazados. ¿Continuar?`}
+        onConfirm={()=>applyIncomeCopy(confirmCopy)}
+        onCancel={()=>setConfirmCopy(null)}
+      />
+    </div>
+  );
+}
+
+// ============ BUDGET PAGE ============
+function BudgetPage() {
+  const { data, updateData, showToast } = useApp();
+  const [month, setMonth] = useState(currentMonthKey());
+  const [entryModal, setEntryModal] = useState(null);   // { item, defaultGroupId }
+  const [ccModal, setCCModal] = useState(null);         // cc virtual item
+  const [groupModal, setGroupModal] = useState(null);   // { group } | null = new
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [confirmCopy, setConfirmCopy] = useState(null); // { prevItems, newCCAssignments } when pending replace
+  const [expEditModal, setExpEditModal] = useState(null); // expense item being edited from budget
+  const [openGroups, setOpenGroups] = useState({ __sin_grupo: true });
+  const [dragItem, setDragItem] = useState(null);      // { id, _fromCC, ccKey, accountId, groupId } | { expId, _fromExp, groupId }
+  const [dragOverGroup, setDragOverGroup] = useState(null);
+  const [budgetGroupBy, setBudgetGroupBy] = useState('group'); // 'group' | 'account'
+  const toggleGroup = (id) => setOpenGroups(p => ({...p, [id]: !p[id]}));
+  const [noteText, setNoteText] = useState(() => data.budgetNotes?.[currentMonthKey()] || '');
+  useEffect(() => { setNoteText(data.budgetNotes?.[month] || ''); }, [month]);
+  const saveNote = (val) => { updateData({ budgetNotes: { ...(data.budgetNotes||{}), [month]: val } }); };
+  const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
+  const handleDragOver = (e, gKey) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverGroup !== gKey) setDragOverGroup(gKey); };
+  const handleDrop = (e, gKey, targetGroupId) => {
+    e.preventDefault();
+    if (!dragItem || dragItem.groupId === targetGroupId) { setDragItem(null); setDragOverGroup(null); return; }
+    if (dragItem._fromCC) {
+      const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==dragItem.ccKey);
+      const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===dragItem.ccKey);
+      updateData({ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:dragItem.ccKey,accountId:dragItem.accountId||null}),groupId:targetGroupId}]});
+    } else if (dragItem._fromExp) {
+      updateData({expenses:(data.expenses||[]).map(i=>i.id===dragItem.expId?{...i,groupId:targetGroupId}:i)});
+    } else {
+      updateData({budget:data.budget.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)});
+    }
+    // Auto-open target group
+    setOpenGroups(p=>({...p,[gKey]:true}));
+    setDragItem(null); setDragOverGroup(null);
+    showToast('Entrada movida');
+  };
+
+  const getCatName = (id) => { const c = data.expenseCategories.find(c=>c.id===id); return c ? `${c.icon} ${c.name}` : '—'; };
+  const getAccName = (id) => { if (!id) return null; return data.accounts.find(a=>a.id===id)?.name || null; };
+  const monthEntries = data.budget.filter(i => i.month === month);
+
+  // CC virtual items with group/account assignments
+  const ccVirtualItems = useMemo(() => {
+    return data.creditCard.map(i => {
+      const payment = getCCPaymentForMonth(i, month);
+      if (!payment) return null;
+      const card = data.creditCards.find(c=>c.id===i.cardId);
+      const n = parseInt(i.installments)||1;
+      const [sy,sm] = (i.startMonth||month).split('-').map(Number);
+      const [my,mm] = month.split('-').map(Number);
+      const num = (my-sy)*12+(mm-sm)+1;
+      const ccKey = `${i.id}__${month}`;
+      const asgn = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===ccKey);
+      return {
+        _fromCC:true, id:`cc_${i.id}_${month}`, ccKey, ccItemId:i.id,
+        description:i.description, plannedAmount:payment,
+        cardName:card?.name||'TC', cardColor:card?.color||'#6366f1', currency:card?.currency||'COP',
+        label: n>1?`Cuota ${num}/${n}`:'Diferido',
+        groupId: asgn?.groupId||null,
+        accountId: asgn?.accountId||null,
+        executed: !!asgn?.executed,
+      };
+    }).filter(Boolean);
+  }, [data.creditCard, data.creditCards, data.ccBudgetAssignments, month]);
+
+  // Expense virtual items (gastos programados)
+  const expVirtualItems = useMemo(() => {
+    return (data.expenses||[]).filter(exp => {
+      if (!exp.showInBudget) return false;
+      return getExpenseMonth(exp) === month;
+    }).map(exp => {
+      const cat = data.expenseCategories.find(c=>c.id===exp.categoryId);
+      return {
+        _fromExp: true, id: `exp_${exp.id}_${month}`, expId: exp.id,
+        description: exp.description,
+        plannedAmount: parseFloat(exp.amount)||0,
+        catLabel: cat ? `${cat.icon} ${cat.name}` : '📋',
+        type: exp.type, recurrence: exp.recurrence,
+        groupId: exp.groupId||null,
+        accountId: exp.accountId||null,
+        currency: exp.currency||'COP',
+        executed: !!exp.executed,
+        exp,
+      };
+    });
+  }, [data.expenses, data.expenseCategories, month]);
+
+  const totalCCBag = sumByCurrency(ccVirtualItems, i=>i.plannedAmount, i=>i.currency);
+  const totalExpBag = sumByCurrency(expVirtualItems, i=>i.plannedAmount, i=>i.currency);
+  const totalEntriesBag = sumByCurrency(monthEntries, i=>i.plannedAmount, i=>i.currency||'COP');
+  const totalAllBag = addCBags(totalEntriesBag, totalCCBag, totalExpBag);
+  const totalIncomeBag = sumByCurrency(data.income.filter(i=>i.month===month), i=>parseFloat(i.amount)||0, i=>i.currency);
+  const excedenteBag = subtractCBags(totalIncomeBag, totalAllBag);
+
+  // Groups + "Sin grupo" sentinel
+  const groups = data.budgetGroups || [];
+  const allSections = [...groups, { id: null, name: 'Sin grupo', goal: null, _special: true }];
+
+  const entriesForGroup = (gid) => monthEntries.filter(i=>(i.groupId||null)===gid);
+  const ccForGroup = (gid) => ccVirtualItems.filter(i=>(i.groupId||null)===gid);
+  const expForGroup = (gid) => expVirtualItems.filter(i=>(i.groupId||null)===gid);
+
+  const renderedSections = useMemo(() => {
+    if (budgetGroupBy === 'group') {
+      return allSections.map(section => {
+        const sEntries = monthEntries.filter(i=>(i.groupId||null)===section.id);
+        const sCCItems = ccVirtualItems.filter(i=>(i.groupId||null)===section.id);
+        const sExpItems = expVirtualItems.filter(i=>(i.groupId||null)===section.id);
+        return { ...section, sEntries, sCCItems, sExpItems, gKey: section.id || '__sin_grupo' };
+      }).filter(s => s._special || s.sEntries.length || s.sCCItems.length || s.sExpItems.length);
+    } else {
+      const byAcc = {};
+      const put = (key, kind, item) => {
+        if (!byAcc[key]) byAcc[key] = { entries: [], cc: [], exp: [] };
+        byAcc[key][kind].push(item);
+      };
+      monthEntries.forEach(e => put(e.accountId||'__acc_none__', 'entries', e));
+      ccVirtualItems.forEach(e => put(e.accountId||'__acc_none__', 'cc', e));
+      expVirtualItems.forEach(e => put(e.accountId||'__acc_none__', 'exp', e));
+      if (!byAcc['__acc_none__']) byAcc['__acc_none__'] = { entries: [], cc: [], exp: [] };
+      return Object.entries(byAcc).map(([key, v]) => {
+        const acc = key === '__acc_none__' ? null : data.accounts.find(a=>a.id===key);
+        return {
+          id: key, name: acc ? acc.name : 'Planificado', goal: null,
+          _special: key === '__acc_none__', _accountMode: true,
+          sEntries: v.entries, sCCItems: v.cc, sExpItems: v.exp,
+          gKey: key,
+        };
+      }).sort((a,b) => a._special ? -1 : b._special ? 1 : a.name.localeCompare(b.name));
+    }
+  }, [budgetGroupBy, allSections, monthEntries, ccVirtualItems, expVirtualItems, data.accounts]);
+
+  // ── Forms ──────────────────────────────────────────────────────
+  function GroupForm({ group, onClose }) {
+    const [form, setForm] = useState(group || { name:'', goal:'' });
+    const set = (k,v) => setForm(f=>({...f,[k]:v}));
+    const save = () => {
+      if (!form.name.trim()) return;
+      const entry = { ...form, goal: form.goal ? parseFloat(form.goal) : null };
+      if (group?.id) { updateData({ budgetGroups: groups.map(g=>g.id===group.id?{...group,...entry}:g) }); }
+      else { updateData({ budgetGroups: [...groups, {...entry, id:uid()}] }); }
+      showToast(group?.id ? 'Grupo actualizado' : 'Grupo creado');
+      onClose();
+    };
+    return (
+      <div>
+        <div className="form-group"><label className="form-label">Nombre del grupo</label><input className="form-input" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ej: Gastos del hogar, Ahorro, Personal"/></div>
+        <div className="form-group"><label className="form-label">Meta mensual (opcional)</label><input className="form-input" type="number" value={form.goal||''} onChange={e=>set('goal',e.target.value)} placeholder="Dejar vacío si no aplica"/></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function EntryForm({ item, defaultGroupId, onClose }) {
+    const [form, setForm] = useState({
+      categoryId: item?.categoryId || data.expenseCategories[0]?.id||'',
+      description: item?.description || '',
+      plannedAmount: item?.plannedAmount || '',
+      currency: item?.currency || 'COP',
+      accountId: item?.accountId || '',
+      groupId: item?.groupId ?? defaultGroupId ?? null,
+      isFixed: item?.isFixed ?? true,
+      month,
+    });
+    const set = (k,v) => setForm(f=>({...f,[k]:v}));
+    const save = () => {
+      if (!form.plannedAmount) return;
+      const entry = { ...form, plannedAmount: parseFloat(form.plannedAmount), groupId: form.groupId||null, accountId: form.accountId||null, currency: form.currency||'COP' };
+      if (item?.id) { updateData({ budget: data.budget.map(i=>i.id===item.id?{...item,...entry}:i) }); }
+      else { updateData({ budget: [...data.budget, {...entry, id:uid()}] }); }
+      showToast(item?.id ? 'Entrada actualizada' : 'Entrada agregada');
+      onClose();
+    };
+    return (
+      <div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Categoría</label><select className="form-input" value={form.categoryId} onChange={e=>set('categoryId',e.target.value)}>{data.expenseCategories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></div>
+          <div className="form-group"><label className="form-label">Descripción</label><input className="form-input" value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Ej: Arriendo"/></div>
+        </div>
+        <div className="form-row form-row-3">
+          <div className="form-group"><label className="form-label">Monto planificado</label><input className="form-input" type="number" value={form.plannedAmount} onChange={e=>set('plannedAmount',e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP</option><option value="USD">USD</option></select></div>
+          <div className="form-group"><label className="form-label">Tipo</label><select className="form-input" value={form.isFixed?'fixed':'variable'} onChange={e=>set('isFixed',e.target.value==='fixed')}><option value="fixed">Fija</option><option value="variable">Variable</option></select></div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Grupo</label>
+            <select className="form-input" value={form.groupId||''} onChange={e=>set('groupId',e.target.value||null)}>
+              <option value="">Sin grupo</option>
+              {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Cuenta asignada</label>
+            <select className="form-input" value={form.accountId||''} onChange={e=>set('accountId',e.target.value||null)}>
+              <option value="">Sin asignar</option>
+              {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'  ↳ ':''}{a.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function CCAssignForm({ ccItem, onClose }) {
+    const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===ccItem.ccKey);
+    const [groupId, setGroupId] = useState(existing?.groupId||'');
+    const save = () => {
+      const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==ccItem.ccKey);
+      const newA = { id: existing?.id||uid(), ccKey:ccItem.ccKey, groupId:groupId||null, accountId:existing?.accountId||null };
+      updateData({ ccBudgetAssignments: [...asgns, newA] });
+      showToast('Grupo asignado');
+      onClose();
+    };
+    return (
+      <div>
+        <p style={{fontSize:13,color:'var(--gray-500)',marginBottom:12}}>💳 {ccItem.cardName} — {ccItem.description} ({fmt(ccItem.plannedAmount)})</p>
+        <div className="form-group">
+          <label className="form-label">Grupo de presupuesto</label>
+          <select className="form-input" value={groupId} onChange={e=>setGroupId(e.target.value)}>
+            <option value="">Sin grupo</option>
+            {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  function ExpEditFormBudget({ item, groups, onClose }) {
+    const { data, updateData, showToast } = useApp();
+    const [form, setForm] = useState({
+      type: item.type||'puntual', date: item.date||today(),
+      categoryId: item.categoryId||data.expenseCategories[0]?.id||'',
+      description: item.description||'', amount: item.amount||'', currency: item.currency||'COP',
+      accountId: item.accountId||null, recurrence: item.recurrence||'monthly',
+      endDate: item.endDate||'', groupId: item.groupId||null, showInBudget: item.showInBudget||false, notes: item.notes||'',
+    });
+    const set = (k,v) => setForm(f=>({...f,[k]:v}));
+    const save = () => {
+      if (!form.amount) return;
+      const entry = { ...form, amount: parseFloat(form.amount), groupId: form.groupId||null,
+        showInBudget: form.showInBudget||false,
+        accountId: form.accountId||null,
+        endDate: form.type==='recurrente'&&form.endDate?form.endDate:null,
+        recurrence: form.type==='recurrente'?form.recurrence:null };
+      updateData({ expenses: (data.expenses||[]).map(i=>i.id===item.id?{...item,...entry}:i) });
+      showToast('Gasto actualizado'); onClose();
+    };
+    return (
+      <div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Tipo</label>
+            <select className="form-input" value={form.type} onChange={e=>set('type',e.target.value)}>
+              <option value="puntual">Puntual</option><option value="recurrente">Recurrente</option>
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">{form.type==='puntual'?'Fecha':'Fecha inicio'}</label>
+            <input className="form-input" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/>
+          </div>
+        </div>
+        {form.type==='recurrente' && (
+          <div className="form-row form-row-2">
+            <div className="form-group"><label className="form-label">Recurrencia</label>
+              <select className="form-input" value={form.recurrence} onChange={e=>set('recurrence',e.target.value)}>
+                <option value="weekly">Semanal</option><option value="monthly">Mensual</option><option value="yearly">Anual</option>
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Fecha fin (opc.)</label>
+              <input className="form-input" type="date" value={form.endDate||''} onChange={e=>set('endDate',e.target.value)}/>
+            </div>
+          </div>
+        )}
+        <div className="form-group"><label className="form-label">Categoría</label>
+          <select className="form-input" value={form.categoryId} onChange={e=>set('categoryId',e.target.value)}>
+            {data.expenseCategories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Descripción</label>
+          <input className="form-input" value={form.description} onChange={e=>set('description',e.target.value)}/>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Monto</label>
+            <input className="form-input" type="number" value={form.amount} onChange={e=>set('amount',e.target.value)}/>
+          </div>
+          <div className="form-group"><label className="form-label">Moneda</label>
+            <select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}>
+              <option value="COP">COP</option><option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Grupo</label>
+            <select className="form-input" value={form.groupId||''} onChange={e=>set('groupId',e.target.value||null)}>
+              <option value="">Sin grupo</option>
+              {(groups||[]).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Cuenta</label>
+            <select className="form-input" value={form.accountId||'__pending__'} onChange={e=>set('accountId',e.target.value==='__pending__'?null:e.target.value)}>
+              <option value="__pending__">Planificado</option>
+              {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="form-group">
+          <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+            <input type="checkbox" className="checkbox" checked={!!form.showInBudget} onChange={e=>set('showInBudget',e.target.checked)}/>
+            <span>Incluir en presupuesto</span>
+          </label>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────
+  const applyMonthCopy = ({ prevItems, newCCAssignments }) => {
+    // Reemplazar (no aditivo): quitar entradas del mes actual antes de insertar
+    const budgetWithoutCurrent = data.budget.filter(i => i.month !== month);
+    const ccAsgnWithoutCurrent = (data.ccBudgetAssignments||[]).filter(a => !a.ccKey.endsWith(`__${month}`));
+    updateData({
+      // Reset accountId a null → estado Planificado en todas las entradas copiadas
+      budget: [...budgetWithoutCurrent, ...prevItems.map(i=>({...i, id:uid(), month, accountId:null}))],
+      // Reset accountId a null en asignaciones CC copiadas
+      ccBudgetAssignments: [...ccAsgnWithoutCurrent, ...newCCAssignments.map(a=>({...a, accountId:null}))],
+    });
+    const n = prevItems.length;
+    showToast(`${n} entrada${n!==1?'s':''} copiada${n!==1?'s':''}${newCCAssignments.length ? ` · ${newCCAssignments.length} asig. TC` : ''}`);
+    setConfirmCopy(null);
+  };
+
+  const copyPrevMonth = () => {
+    const [y,m] = month.split('-').map(Number);
+    const prev = getMonthKey(new Date(y, m-2, 1));
+    // Copiar todas las entradas del mes anterior (se resetean a Planificado en applyMonthCopy)
+    const prevItems = data.budget.filter(i => i.month === prev);
+    // CC: copiar todas las asignaciones del mes anterior (accountId se resetea a null)
+    const prevCCAsgnKeys = (data.ccBudgetAssignments||[]).filter(a => a.ccKey.endsWith(`__${prev}`));
+    const newCCAssignments = [];
+    prevCCAsgnKeys.forEach(a => {
+      const ccItemId = a.ccKey.slice(0, -(prev.length + 2));
+      const ccItem = data.creditCard.find(i => i.id === ccItemId);
+      if (ccItem && getCCPaymentForMonth(ccItem, month) > 0) {
+        const newKey = `${ccItemId}__${month}`;
+        newCCAssignments.push({ ...a, id: uid(), ccKey: newKey });
+      }
+    });
+    if (!prevItems.length && !newCCAssignments.length) { showToast('No hay entradas en el mes anterior'); return; }
+    const pending = { prevItems, newCCAssignments };
+    const currentEntries = data.budget.filter(i => i.month === month);
+    if (currentEntries.length > 0) {
+      setConfirmCopy(pending); // mostrar modal de confirmación
+    } else {
+      applyMonthCopy(pending); // sin entradas actuales, copiar directo
+    }
+  };
+
+  const AccountTag = ({ accountId }) => {
+    const name = getAccName(accountId);
+    if (!name) return <span className="badge" style={{background:'var(--gray-100)',color:'var(--gray-400)',fontSize:11}}>Sin asignar</span>;
+    return <span className="badge badge-blue" style={{fontSize:11}}>{name}</span>;
+  };
+
+  // Estado color coding: '' = Planificado (white), '__exec__' = Ejecutado (green), accountId = (yellow)
+  const EJECUTADO = '__exec__';
+  const estadoStyle = (val) => {
+    if (!val) return { background:'#ffffff', color:'var(--gray-600)', border:'1px solid var(--gray-200)' };
+    if (val === EJECUTADO) return { background:'#dcfce7', color:'#15803d', border:'1px solid #bbf7d0' };
+    return { background:'#fef9c3', color:'#92400e', border:'1px solid #fde68a' };
+  };
+  const EstadoSelect = ({ value, onChange }) => (
+    <select
+      style={{fontSize:12,padding:'2px 8px',borderRadius:6,cursor:'pointer',maxWidth:160,fontWeight:500,...estadoStyle(value||'')}}
+      value={value||''}
+      onChange={e=>onChange(e.target.value||null)}
+    >
+      <option value="">Planificado</option>
+      {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+    </select>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+        <div><h2>Presupuesto</h2><p>Entradas planificadas del mes</p></div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <button className="btn btn-outline" onClick={()=>setGroupModal({})}>Gestionar grupos</button>
+          <button className="btn btn-outline" onClick={copyPrevMonth}>Copiar mes anterior</button>
+          <button className="btn btn-primary" onClick={()=>setEntryModal({item:null, defaultGroupId:null})}>{Icons.plus} Nueva entrada</button>
+        </div>
+      </div>
+      <MonthSelector month={month} onChange={setMonth}/>
+
+      <div className="stat-grid" style={{marginTop:16}}>
+        <div className="stat-card" style={{borderLeft:'4px solid var(--primary)'}}>
+          <div className="stat-label">Presupuesto total</div>
+          <div className="stat-value"><FmtMulti totals={totalIncomeBag}/></div>
+          <div style={{fontSize:11,color:'var(--gray-400)',marginTop:2}}>Ingresos renta + no renta</div>
+        </div>
+        <div className="stat-card" style={{borderLeft:'4px solid var(--success)'}}>
+          <div className="stat-label">Por asignar</div>
+          <div className="stat-value" style={{fontSize:20}}><FmtMulti totals={excedenteBag}/></div>
+          <div style={{fontSize:11,color:'var(--gray-400)',marginTop:2}}>Ingresos − Asignado</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Total asignado</div>
+          <div className="stat-value" style={{fontSize:20}}><FmtMulti totals={totalAllBag}/></div>
+          <div style={{fontSize:11,color:'var(--gray-400)',marginTop:2}}>Entradas + TC + Gastos prog.</div>
+        </div>
+        <div className="stat-card"><div className="stat-label">Créditos y suscripciones</div><div className="stat-value" style={{fontSize:20,color:'var(--danger)'}}><FmtMulti totals={totalCCBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Gastos programados</div><div className="stat-value" style={{fontSize:20,color:'var(--warning)'}}><FmtMulti totals={totalExpBag}/></div></div>
+      </div>
+
+      {/* GroupBy toggle */}
+      <div style={{display:'flex',alignItems:'center',gap:8,margin:'16px 0 8px'}}>
+        <span style={{fontSize:13,color:'var(--gray-500)',fontWeight:500}}>Agrupar por:</span>
+        {[{val:'group',label:'Grupo'},{val:'account',label:'Cuenta'}].map(opt=>(
+          <button key={opt.val} onClick={()=>setBudgetGroupBy(opt.val)}
+            style={{fontSize:12,fontWeight:600,padding:'4px 14px',borderRadius:20,border:'1.5px solid',cursor:'pointer',
+              background:budgetGroupBy===opt.val?'var(--primary)':'white',
+              color:budgetGroupBy===opt.val?'white':'var(--gray-600)',
+              borderColor:budgetGroupBy===opt.val?'var(--primary)':'var(--gray-200)'}}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {renderedSections.map(section => {
+        const { sEntries, sCCItems, sExpItems, gKey } = section;
+        const sTotalBag = addCBags(
+          sumByCurrency(sEntries, i=>i.plannedAmount, i=>i.currency||'COP'),
+          sumByCurrency(sCCItems, i=>i.plannedAmount, i=>i.currency||'COP'),
+          sumByCurrency(sExpItems, i=>i.plannedAmount, i=>i.currency||'COP')
+        );
+        const sTotalCOP = sTotalBag['COP']||0;
+        const rawPct = section.goal > 0 ? (sTotalCOP / section.goal) * 100 : null;
+        const pct = rawPct !== null ? Math.min(rawPct, 100) : null; // capped for bar width
+        // Color: azul <99%, verde 99-101%, amarillo >110%, rojo >140%
+        const sBarColor = rawPct === null ? 'var(--primary)'
+          : rawPct > 140 ? 'var(--danger)'
+          : rawPct > 110 ? 'var(--warning)'
+          : rawPct >= 99  ? 'var(--success)'
+          : 'var(--primary)';
+        // Ejecutado / pendiente
+        const sExecutedBag = addCBags(
+          sumByCurrency(sEntries.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency||'COP'),
+          sumByCurrency(sCCItems.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency||'COP'),
+          sumByCurrency(sExpItems.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency||'COP')
+        );
+        const sNotExecutedBag = subtractCBags(sTotalBag, sExecutedBag);
+        const totalCount = sEntries.length + sCCItems.length + sExpItems.length;
+        const execCount = sEntries.filter(i=>i.executed).length + sCCItems.filter(i=>i.executed).length + sExpItems.filter(i=>i.executed).length;
+        const hasExec = execCount > 0;
+        const hasPending = execCount < totalCount;
+        const isOpen = !!openGroups[gKey];
+        const canDrag = budgetGroupBy === 'group';
+        const isDragTarget = canDrag && dragItem && dragOverGroup === gKey && dragItem.groupId !== section.id;
+        return (
+          <div key={gKey} className="accordion"
+            onDragOver={canDrag ? e=>handleDragOver(e, gKey) : undefined}
+            onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}
+            onDrop={canDrag ? e=>handleDrop(e, gKey, section.id) : undefined}
+            style={isDragTarget ? {outline:'2px solid var(--primary)',borderRadius:12,background:'var(--primary-light)'} : {}}
+          >
+            <div className="accordion-header" onClick={()=>{ if (!dragItem) toggleGroup(gKey); }}>
+              <div style={{flex:1}}>
+                {/* Fila 1: nombre + badges */}
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontWeight:600,fontSize:14}}>{section.name}</span>
+                  {section._special && <span className="badge badge-yellow" style={{fontSize:10}}>{budgetGroupBy==='group'?'Sin grupo':'Planificado'}</span>}
+                  {isDragTarget && <span className="badge badge-blue" style={{fontSize:10}}>Soltar aquí</span>}
+                  <span style={{fontSize:12,color:'var(--gray-400)'}}>{totalCount} entrada{totalCount!==1?'s':''}</span>
+                </div>
+                {/* Fila 2: barra de meta (si aplica) */}
+                {pct !== null && (
+                  <div style={{marginTop:4,display:'flex',alignItems:'center',gap:8}}>
+                    <div className="progress-bar" style={{flex:1,height:5}}>
+                      <div className="progress-fill" style={{width:`${pct}%`,background:sBarColor}}/>
+                    </div>
+                    <span style={{fontSize:11,color:'var(--gray-400)',whiteSpace:'nowrap'}}>
+                      <FmtMulti totals={sTotalBag}/> / {fmt(section.goal)}
+                      {rawPct !== null && <span style={{marginLeft:4,color:sBarColor,fontWeight:600}}>{rawPct.toFixed(0)}%</span>}
+                    </span>
+                  </div>
+                )}
+                {/* Fila 3: ejecutado / pendiente */}
+                {totalCount > 0 && (
+                  <div style={{marginTop:3,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                    {hasExec && (
+                      <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,color:'var(--success)',fontWeight:500}}>
+                        <span>✓</span><FmtMulti totals={sExecutedBag}/>
+                      </span>
+                    )}
+                    {hasPending && (
+                      <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,color:'var(--gray-400)'}}>
+                        <span>○</span><FmtMulti totals={sNotExecutedBag}/>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:16,marginLeft:12}}>
+                {pct === null && <span style={{fontWeight:700,fontSize:15}}><FmtMulti totals={sTotalBag}/></span>}
+                {!section._special && budgetGroupBy === 'group' && (
+                  <button className="btn-icon" style={{padding:2}} onClick={e=>{e.stopPropagation();setGroupModal({group:section})}}>{Icons.edit}</button>
+                )}
+                <div className={`accordion-chevron ${isOpen?'open':''}`}>{chevDown}</div>
+              </div>
+            </div>
+
+            {isOpen && (
+              <div className="accordion-body">
+                {sEntries.length === 0 && sCCItems.length === 0 && sExpItems.length === 0 ? (
+                  <div style={{padding:'12px 16px',fontSize:13,color:'var(--gray-400)'}}>Sin entradas{canDrag?' — suelta aquí para mover':''}</div>
+                ) : (
+                  <table style={{margin:0}}>
+                    <thead><tr><th style={{width:20}}></th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Cuenta</th><th>Tipo</th><th>Ejecutado</th><th></th></tr></thead>
+                    <tbody>
+                      {sEntries.map(entry => (
+                        <tr key={entry.id}
+                          draggable={canDrag}
+                          onDragStart={canDrag ? e=>handleDragStart(e,{id:entry.id,_fromCC:false,groupId:section.id}) : undefined}
+                          onDragEnd={canDrag ? handleDragEnd : undefined}
+                          style={{cursor:canDrag?'grab':'default',opacity:entry.executed?0.55:dragItem?.id===entry.id?0.45:1}}
+                        >
+                          <td style={{color:'var(--gray-300)',fontSize:16,paddingRight:0}}>{canDrag?'⠿':''}</td>
+                          <td>{getCatName(entry.categoryId)}</td>
+                          <td style={{fontWeight:500}}>{entry.description}</td>
+                          <td style={{fontWeight:600}}>{fmt(entry.plannedAmount, entry.currency)}</td>
+                          <td>
+                            <EstadoSelect value={entry.accountId}
+                              onChange={v=>updateData({budget:data.budget.map(i=>i.id===entry.id?{...i,accountId:v}:i)})}/>
+                          </td>
+                          <td>{entry.isFixed?<span className="badge badge-blue">Fija</span>:<span className="badge badge-yellow">Variable</span>}</td>
+                          <td style={{textAlign:'center'}}>
+                            <input type="checkbox" className="checkbox" checked={!!entry.executed}
+                              onChange={()=>updateData({budget:data.budget.map(i=>i.id===entry.id?{...i,executed:!i.executed}:i)})}
+                              title="Marcar como ejecutado"/>
+                          </td>
+                          <td style={{display:'flex',gap:4}}>
+                            <button className="btn-icon" onClick={()=>setEntryModal({item:entry, defaultGroupId:section.id})}>{Icons.edit}</button>
+                            <button className="btn-icon" onClick={()=>setConfirmDel(entry)}>{Icons.trash}</button>
+                          </td>
+                        </tr>
+                      ))}
+                      {sCCItems.map(cc => {
+                        const ccAsgn = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===cc.ccKey);
+                        return (
+                          <tr key={cc.id} style={{background:'#fffbeb',cursor:canDrag?'grab':'default',opacity:ccAsgn?.executed?0.55:dragItem?.ccKey===cc.ccKey?0.45:1}}
+                            draggable={canDrag}
+                            onDragStart={canDrag ? e=>handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,accountId:cc.accountId,groupId:section.id}) : undefined}
+                            onDragEnd={canDrag ? handleDragEnd : undefined}
+                          >
+                            <td style={{color:'var(--gray-300)',fontSize:16,paddingRight:0}}>{canDrag?'⠿':''}</td>
+                            <td><div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:8,height:8,borderRadius:'50%',background:cc.cardColor,flexShrink:0}}/><span style={{fontSize:12}}>💳 {cc.cardName}</span></div></td>
+                            <td style={{fontWeight:500}}>{cc.description}</td>
+                            <td style={{fontWeight:600,color:'var(--danger)'}}>{fmt(cc.plannedAmount, cc.currency)}</td>
+                            <td>
+                              <EstadoSelect value={cc.accountId}
+                                onChange={v=>{
+                                  const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==cc.ccKey);
+                                  updateData({ccBudgetAssignments:[...asgns,{...(ccAsgn||{id:uid(),ccKey:cc.ccKey}),groupId:cc.groupId||null,accountId:v}]});
+                                }}/>
+                            </td>
+                            <td><span className="badge badge-red" style={{fontSize:10}}>{cc.label}</span></td>
+                            <td style={{textAlign:'center'}}>
+                              <input type="checkbox" className="checkbox" checked={!!ccAsgn?.executed}
+                                onChange={()=>{
+                                  const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==cc.ccKey);
+                                  updateData({ccBudgetAssignments:[...asgns,{...(ccAsgn||{id:uid(),ccKey:cc.ccKey,groupId:cc.groupId||null,accountId:cc.accountId||null}),executed:!ccAsgn?.executed}]});
+                                }}
+                                title="Marcar como ejecutado"/>
+                            </td>
+                            <td>
+                              <button className="btn-icon" title="Asignar grupo" onClick={()=>setCCModal(cc)}>{Icons.edit}</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {sExpItems.map(ev => {
+                        const overdue = isExpenseOverdue(ev.exp);
+                        const expEstadoStyle2 = (val) => {
+                          if (!val || val==='__pending__') return {background:'#f3f4f6',color:'var(--gray-600)',border:'1px solid var(--gray-200)'};
+                          return {background:'#fef9c3',color:'#92400e',border:'1px solid #fde68a'};
+                        };
+                        return (
+                          <tr key={ev.id} style={{background:'#f0fdf4',cursor:canDrag?'grab':'default',opacity:ev.exp.executed?0.55:dragItem?.expId===ev.expId?0.45:1}}
+                            draggable={canDrag}
+                            onDragStart={canDrag ? e=>handleDragStart(e,{expId:ev.expId,_fromExp:true,groupId:section.id}) : undefined}
+                            onDragEnd={canDrag ? handleDragEnd : undefined}
+                          >
+                            <td style={{color:'var(--gray-300)',fontSize:16,paddingRight:0}}>{canDrag?'⠿':''}</td>
+                            <td>
+                              <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                <span style={{fontSize:12}}>{ev.catLabel}</span>
+                                {overdue && <span title="Vencido sin ejecutar" style={{fontSize:13}}>⚠️</span>}
+                              </div>
+                            </td>
+                            <td style={{fontWeight:500}}>{ev.description}</td>
+                            <td style={{fontWeight:600,color:'var(--warning)'}}>{fmt(ev.plannedAmount, ev.currency)}</td>
+                            <td>
+                              <select style={{fontSize:12,padding:'2px 8px',borderRadius:6,cursor:'pointer',maxWidth:160,fontWeight:500,...expEstadoStyle2(ev.accountId||'__pending__')}}
+                                value={ev.accountId||'__pending__'}
+                                onChange={e=>{
+                                  const v = e.target.value==='__pending__'?null:e.target.value;
+                                  updateData({expenses:data.expenses.map(i=>i.id===ev.expId?{...i,accountId:v}:i)});
+                                }}>
+                                <option value="__pending__">Planificado</option>
+                                {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+                              </select>
+                            </td>
+                            <td>
+                              <span className="badge" style={{background:'#dcfce7',color:'#15803d',fontSize:10}}>
+                                {ev.type==='puntual'?'Puntual':({weekly:'Semanal',monthly:'Mensual',yearly:'Anual'}[ev.recurrence]||ev.recurrence)}
+                              </span>
+                            </td>
+                            <td style={{textAlign:'center'}}>
+                              <input type="checkbox" className="checkbox" checked={!!ev.exp.executed}
+                                onChange={()=>updateData({expenses:data.expenses.map(i=>i.id===ev.exp.id?{...i,executed:!i.executed}:i)})}
+                                title="Marcar como ejecutado"/>
+                            </td>
+                            <td>
+                              <button className="btn-icon" title="Editar gasto" onClick={()=>setExpEditModal(ev.exp)}>{Icons.edit}</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+                {budgetGroupBy === 'group' && (
+                  <div style={{padding:'8px 16px',borderTop:'1px solid var(--gray-200)',display:'flex',gap:8}}>
+                    <button className="btn btn-outline btn-sm" onClick={()=>setEntryModal({item:null, defaultGroupId:section.id})}>{Icons.plus} Agregar entrada{section.id?` a ${section.name}`:''}</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ── Anotaciones del mes ─────────────────────────────────── */}
+      <div className="card" style={{marginTop:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+          <span style={{fontSize:16}}>📝</span>
+          <span style={{fontWeight:600,fontSize:15,color:'var(--gray-800)'}}>Anotaciones</span>
+          <span style={{fontSize:12,color:'var(--gray-400)',marginLeft:4}}>{noteText.trim() ? `${noteText.trim().length} car.` : 'Sin notas este mes'}</span>
+        </div>
+        <textarea
+          value={noteText}
+          onChange={e => setNoteText(e.target.value)}
+          placeholder={`Notas para ${formatMonthLabel(month)}… ideas, recordatorios, contexto del mes.`}
+          style={{
+            width:'100%', minHeight:90, resize:'vertical',
+            border:'1px solid var(--gray-200)', borderRadius:8,
+            padding:'10px 12px', fontSize:13, fontFamily:'inherit',
+            color:'var(--gray-700)', lineHeight:1.6,
+            outline:'none', transition:'border-color 0.15s, background 0.15s',
+            background:'var(--gray-50)',
+          }}
+          onFocus={e => { e.target.style.borderColor='var(--primary)'; e.target.style.background='white'; }}
+          onBlur={e => { e.target.style.borderColor='var(--gray-200)'; e.target.style.background='var(--gray-50)'; saveNote(e.target.value); }}
+        />
+      </div>
+
+      {/* Group manager modal */}
+      <Modal open={!!groupModal} onClose={()=>setGroupModal(null)} title={groupModal?.group?.id ? 'Editar grupo' : 'Gestionar grupos'}>
+        {groupModal && !groupModal.group && (
+          <div>
+            {groups.length === 0 ? <p style={{fontSize:13,color:'var(--gray-400)',marginBottom:12}}>No hay grupos creados aún.</p> :
+            <div style={{marginBottom:16}}>
+              {groups.map(g=>(
+                <div key={g.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:'1px solid var(--gray-100)'}}>
+                  <span style={{flex:1,fontWeight:500}}>{g.name}</span>
+                  {g.goal && <span style={{fontSize:12,color:'var(--gray-400)'}}>Meta: {fmt(g.goal)}</span>}
+                  <button className="btn-icon" onClick={()=>setGroupModal({group:g})}>{Icons.edit}</button>
+                  <button className="btn-icon" onClick={()=>{updateData({budgetGroups:groups.filter(x=>x.id!==g.id)});showToast('Grupo eliminado');}}>{Icons.trash}</button>
+                </div>
+              ))}
+            </div>}
+            <button className="btn btn-primary btn-sm" onClick={()=>setGroupModal({group:null, _creating:true})}>{Icons.plus} Nuevo grupo</button>
+          </div>
+        )}
+        {groupModal && (groupModal.group || groupModal._creating) && (
+          <GroupForm group={groupModal.group} onClose={()=>setGroupModal(null)}/>
+        )}
+      </Modal>
+
+      <Modal open={!!entryModal} onClose={()=>setEntryModal(null)} title={entryModal?.item?.id ? 'Editar entrada' : 'Nueva entrada'}>
+        {entryModal && <EntryForm item={entryModal.item} defaultGroupId={entryModal.defaultGroupId} onClose={()=>setEntryModal(null)}/>}
+      </Modal>
+
+      <Modal open={!!ccModal} onClose={()=>setCCModal(null)} title="Asignar grupo">
+        {ccModal && <CCAssignForm ccItem={ccModal} onClose={()=>setCCModal(null)}/>}
+      </Modal>
+
+      <Modal open={!!expEditModal} onClose={()=>setExpEditModal(null)} title="Editar gasto programado">
+        {expEditModal && <ExpEditFormBudget item={expEditModal} groups={groups} onClose={()=>setExpEditModal(null)}/>}
+      </Modal>
+
+      <ConfirmDialog open={!!confirmDel} message="¿Eliminar esta entrada del presupuesto?" onConfirm={()=>{updateData({budget:data.budget.filter(i=>i.id!==confirmDel.id)});showToast('Eliminada');setConfirmDel(null);}} onCancel={()=>setConfirmDel(null)}/>
+
+      <ConfirmDialog
+        open={!!confirmCopy}
+        message={`El mes actual ya tiene ${data.budget.filter(i=>i.month===month).length} entrada${data.budget.filter(i=>i.month===month).length!==1?'s':''} manuales. Al copiar del mes anterior estas serán reemplazadas. ¿Continuar?`}
+        onConfirm={()=>applyMonthCopy(confirmCopy)}
+        onCancel={()=>setConfirmCopy(null)}
+      />
+    </div>
+  );
+}
+
+// ============ GASTOS PROGRAMADOS HELPERS ============
+// Generate occurrence dates for a recurring expense
+function generateRecurrenceDates(startDate, endDate, recurrence) {
+  const dates = [];
+  const start = new Date(startDate + 'T12:00:00');
+  let end;
+  if (endDate) {
+    end = new Date(endDate + 'T12:00:00');
+  } else {
+    end = new Date(start);
+    if (recurrence === 'weekly') end.setMonth(end.getMonth() + 3);
+    else if (recurrence === 'monthly') { end.setFullYear(end.getFullYear() + 1); end.setMonth(end.getMonth() - 1); }
+    else if (recurrence === 'yearly') end.setFullYear(end.getFullYear() + 3);
+  }
+  let cur = new Date(start);
+  let safety = 0;
+  while (cur <= end && safety < 200) {
+    const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+    dates.push(ds);
+    if (recurrence === 'weekly') cur.setDate(cur.getDate() + 7);
+    else if (recurrence === 'monthly') cur.setMonth(cur.getMonth() + 1);
+    else if (recurrence === 'yearly') cur.setFullYear(cur.getFullYear() + 1);
+    safety++;
+  }
+  return dates;
+}
+
+// Get month key from expense date
+function getExpenseMonth(exp) {
+  return exp.date ? exp.date.slice(0, 7) : (exp.month || '');
+}
+
+// Check if a single expense item is overdue
+function isExpenseOverdue(exp) {
+  return exp.date <= today() && !exp.executed;
+}
+
+const recurrenceLabel = (r) => ({ weekly:'Semanal', monthly:'Mensual', yearly:'Anual' })[r]||r;
+
+// ============ EXPENSES PAGE (GASTOS PROGRAMADOS) ============
+function ExpensesPage() {
+  const { data, updateData, showToast } = useApp();
+  const [month, setMonth] = useState(currentMonthKey());
+  const [modal, setModal] = useState(null);          // { item, editScope } — null for new
+  const [confirmDel, setConfirmDel] = useState(null); // single puntual delete
+  const [recAction, setRecAction] = useState(null);   // { item, action:'edit'|'delete' }
+  const [groupBy, setGroupBy] = useState('group');    // 'group' | 'account'
+  const [openGroups, setOpenGroups] = useState({});
+  const toggleGroup = (key) => setOpenGroups(prev => ({...prev, [key]: prev[key] === false ? true : false}));
+  const isGroupOpen = (key) => openGroups[key] !== false;
+
+  const groups = data.budgetGroups || [];
+
+  // Expenses in this month — each item is independent
+  const monthExpenses = useMemo(() => {
+    return (data.expenses || []).filter(exp => getExpenseMonth(exp) === month)
+      .sort((a,b) => a.date.localeCompare(b.date));
+  }, [data.expenses, month]);
+
+  // Grouped expenses for accordion
+  const groupedExpenses = useMemo(() => {
+    if (groupBy === 'group') {
+      const byGroup = {};
+      monthExpenses.forEach(exp => {
+        const key = exp.groupId || '__none__';
+        if (!byGroup[key]) byGroup[key] = [];
+        byGroup[key].push(exp);
+      });
+      const order = ['__none__', ...groups.map(g => g.id)];
+      return order.filter(k => byGroup[k]?.length > 0).map(k => ({
+        key: k,
+        label: k === '__none__' ? 'Sin grupo' : (groups.find(g=>g.id===k)?.name || 'Sin grupo'),
+        items: byGroup[k],
+      }));
+    } else {
+      const byAcc = {};
+      monthExpenses.forEach(exp => {
+        const key = exp.accountId || '__none__';
+        if (!byAcc[key]) byAcc[key] = [];
+        byAcc[key].push(exp);
+      });
+      return Object.entries(byAcc).map(([key, items]) => {
+        const acc = key === '__none__' ? null : data.accounts.find(a=>a.id===key);
+        return { key, label: acc ? acc.name : 'Planificado', items };
+      }).sort((a,b) => a.label === 'Planificado' ? -1 : b.label === 'Planificado' ? 1 : a.label.localeCompare(b.label));
+    }
+  }, [monthExpenses, groupBy, groups, data.accounts]);
+
+  const getCatName = (id) => { const c = data.expenseCategories.find(c=>c.id===id); return c ? `${c.icon} ${c.name}` : '—'; };
+  const totalMonthBag = sumByCurrency(monthExpenses, e=>parseFloat(e.amount)||0, e=>e.currency);
+  const pendingCount = monthExpenses.filter(exp => isExpenseOverdue(exp)).length;
+
+  // Estado styling
+  const expEstadoStyle = (val) => {
+    if (!val) return { background:'#f3f4f6', color:'var(--gray-600)', border:'1px solid var(--gray-200)' };
+    return { background:'#fef9c3', color:'#92400e', border:'1px solid #fde68a' };
+  };
+  const ExpenseEstadoSelect = ({ value, onChange }) => (
+    <select style={{fontSize:12,padding:'2px 8px',borderRadius:6,cursor:'pointer',maxWidth:160,fontWeight:500,...expEstadoStyle(value)}}
+      value={value||''} onChange={e=>onChange(e.target.value||null)}>
+      <option value="">Planificado</option>
+      {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+    </select>
+  );
+
+  // ── Create / Edit form ─────────────────────────────────────────
+  function GastoForm({ item, editScope, onClose }) {
+    const isEdit = !!item?.id;
+    const [form, setForm] = useState(isEdit ? {
+      type: item.type||'puntual',
+      date: item.date||today(),
+      categoryId: item.categoryId||data.expenseCategories[0]?.id||'',
+      description: item.description||'',
+      amount: item.amount||'',
+      currency: item.currency||'COP',
+      accountId: item.accountId||null,
+      recurrence: item.recurrence||'monthly',
+      endDate: '',
+      groupId: item.groupId||null,
+      showInBudget: item.showInBudget||false,
+      notes: item.notes||'',
+    } : {
+      type:'puntual', date:today(), categoryId:data.expenseCategories[0]?.id||'',
+      description:'', amount:'', currency:'COP', accountId:null,
+      recurrence:'monthly', endDate:'', groupId:null, showInBudget:false, notes:'',
+    });
+    const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+    // Preview count for new recurring
+    const previewCount = (!isEdit && form.type === 'recurrente' && form.date)
+      ? generateRecurrenceDates(form.date, form.endDate||null, form.recurrence).length : 0;
+
+    const save = () => {
+      if (!form.amount || !form.date) return;
+      const base = {
+        categoryId: form.categoryId, description: form.description,
+        amount: parseFloat(form.amount), currency: form.currency,
+        accountId: form.accountId||null, groupId: form.groupId||null,
+        showInBudget: form.showInBudget||false, notes: form.notes||'',
+      };
+
+      if (isEdit) {
+        // Scoped edit
+        if (!editScope || editScope === 'single') {
+          // Only this item
+          updateData({ expenses: data.expenses.map(i=>i.id===item.id?{...i,...base,date:form.date,month:form.date.slice(0,7)}:i) });
+        } else {
+          const gid = item.recurrenceGroupId;
+          const siblings = gid ? data.expenses.filter(e=>e.recurrenceGroupId===gid) : [item];
+          let targets;
+          if (editScope === 'thisAndFuture') targets = new Set(siblings.filter(e=>e.date>=item.date).map(e=>e.id));
+          else targets = new Set(siblings.map(e=>e.id)); // 'all'
+          updateData({ expenses: data.expenses.map(i=>targets.has(i.id)?{...i,...base}:i) });
+        }
+        showToast('Gasto actualizado');
+      } else {
+        // New
+        if (form.type === 'puntual') {
+          const entry = { ...base, id:uid(), type:'puntual', recurrence:null,
+            recurrenceGroupId:null, date:form.date, month:form.date.slice(0,7), executed:false };
+          updateData({ expenses: [...(data.expenses||[]), entry] });
+          showToast('Gasto programado');
+        } else {
+          // Recurrente → generar items independientes
+          const dates = generateRecurrenceDates(form.date, form.endDate||null, form.recurrence);
+          const gid = uid();
+          const newItems = dates.map(d => ({
+            ...base, id:uid(), type:'recurrente', recurrence:form.recurrence,
+            recurrenceGroupId: gid, date:d, month:d.slice(0,7), executed:false,
+          }));
+          updateData({ expenses: [...(data.expenses||[]), ...newItems] });
+          showToast(`${newItems.length} gasto${newItems.length!==1?'s':''} programado${newItems.length!==1?'s':''}`);
+        }
+      }
+      onClose();
+    };
+
+    return (
+      <div>
+        {!isEdit && (
+          <div className="form-row form-row-2">
+            <div className="form-group">
+              <label className="form-label">Tipo</label>
+              <select className="form-input" value={form.type} onChange={e=>set('type',e.target.value)}>
+                <option value="puntual">Puntual (fecha única)</option>
+                <option value="recurrente">Recurrente</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{form.type==='puntual'?'Fecha':'Fecha de inicio'}</label>
+              <input className="form-input" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/>
+            </div>
+          </div>
+        )}
+        {isEdit && (
+          <div className="form-group">
+            <label className="form-label">Fecha</label>
+            <input className="form-input" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/>
+          </div>
+        )}
+        {!isEdit && form.type==='recurrente' && (
+          <div className="form-row form-row-2">
+            <div className="form-group">
+              <label className="form-label">Recurrencia</label>
+              <select className="form-input" value={form.recurrence} onChange={e=>set('recurrence',e.target.value)}>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensual</option>
+                <option value="yearly">Anual</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Fecha de fin (opcional)</label>
+              <input className="form-input" type="date" value={form.endDate||''} onChange={e=>set('endDate',e.target.value)}/>
+            </div>
+          </div>
+        )}
+        {!isEdit && form.type==='recurrente' && previewCount > 0 && (
+          <div style={{fontSize:12,color:'var(--primary)',marginBottom:12,padding:'6px 10px',background:'var(--primary-light)',borderRadius:6}}>
+            Se crearán <strong>{previewCount} gastos independientes</strong> ({recurrenceLabel(form.recurrence).toLowerCase()})
+          </div>
+        )}
+        <div className="form-group"><label className="form-label">Categoría</label><select className="form-input" value={form.categoryId} onChange={e=>set('categoryId',e.target.value)}>{data.expenseCategories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></div>
+        <div className="form-group"><label className="form-label">Descripción</label><input className="form-input" value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Ej: Mercado semanal"/></div>
+        <div className="form-row form-row-2">
+          <div className="form-group"><label className="form-label">Monto</label><input className="form-input" type="number" value={form.amount} onChange={e=>set('amount',e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP</option><option value="USD">USD</option></select></div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Grupo de presupuesto</label>
+            <select className="form-input" value={form.groupId||''} onChange={e=>set('groupId',e.target.value||null)}>
+              <option value="">Sin grupo</option>
+              {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Cuenta</label>
+            <select className="form-input" value={form.accountId||''} onChange={e=>set('accountId',e.target.value||null)}>
+              <option value="">Planificado</option>
+              {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="form-group"><label className="form-label">Notas</label><input className="form-input" value={form.notes||''} onChange={e=>set('notes',e.target.value)}/></div>
+        <div className="form-group">
+          <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+            <input type="checkbox" className="checkbox" checked={!!form.showInBudget} onChange={e=>set('showInBudget',e.target.checked)}/>
+            <span>Incluir en presupuesto</span>
+          </label>
+        </div>
+        {isEdit && editScope && editScope !== 'single' && (
+          <div style={{fontSize:12,color:'var(--warning)',marginBottom:8,padding:'6px 10px',background:'var(--warning-light)',borderRadius:6}}>
+            {editScope==='thisAndFuture'?'Se editará este gasto y todos los siguientes de la serie':'Se editarán todos los gastos de la serie'}
+          </div>
+        )}
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Actions ────────────────────────────────────────────────────
+  const handleEdit = (exp) => {
+    if (exp.recurrenceGroupId) { setRecAction({item:exp, action:'edit'}); }
+    else { setModal({item:exp, editScope:'single'}); }
+  };
+
+  const handleDelete = (exp) => {
+    if (exp.recurrenceGroupId) { setRecAction({item:exp, action:'delete'}); }
+    else { setConfirmDel(exp); }
+  };
+
+  const executeRecAction = (scope) => {
+    const { item, action } = recAction;
+    const gid = item.recurrenceGroupId;
+    if (action === 'edit') {
+      setRecAction(null);
+      setModal({ item, editScope: scope });
+    } else {
+      // delete
+      let toRemove;
+      const siblings = gid ? data.expenses.filter(e=>e.recurrenceGroupId===gid) : [item];
+      if (scope === 'single') toRemove = new Set([item.id]);
+      else if (scope === 'thisAndFuture') toRemove = new Set(siblings.filter(e=>e.date>=item.date).map(e=>e.id));
+      else toRemove = new Set(siblings.map(e=>e.id));
+      updateData({ expenses: data.expenses.filter(e=>!toRemove.has(e.id)) });
+      showToast(`${toRemove.size} gasto${toRemove.size!==1?'s':''} eliminado${toRemove.size!==1?'s':''}`);
+      setRecAction(null);
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+        <div><h2>Gastos programados</h2><p>Gastos planificados y recurrentes</p></div>
+        <button className="btn btn-primary" onClick={()=>setModal({item:null})}>{Icons.plus} Nuevo gasto</button>
+      </div>
+      <MonthSelector month={month} onChange={setMonth}/>
+      <div className="stat-grid" style={{marginTop:16}}>
+        <div className="stat-card"><div className="stat-label">Total este mes</div><div className="stat-value"><FmtMulti totals={totalMonthBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Gastos en este mes</div><div className="stat-value" style={{fontSize:20}}>{monthExpenses.length}</div></div>
+        <div className="stat-card"><div className="stat-label">⚠️ Vencidos sin ejecutar</div><div className="stat-value" style={{fontSize:20,color:pendingCount>0?'var(--danger)':'var(--gray-400)'}}>{pendingCount}</div></div>
+      </div>
+
+      {/* GroupBy toggle */}
+      <div style={{display:'flex',alignItems:'center',gap:8,margin:'16px 0 8px'}}>
+        <span style={{fontSize:13,color:'var(--gray-500)',fontWeight:500}}>Agrupar por:</span>
+        {[{val:'group',label:'Grupo'},{val:'account',label:'Cuenta'}].map(opt => (
+          <button key={opt.val} onClick={()=>setGroupBy(opt.val)}
+            style={{fontSize:12,fontWeight:600,padding:'4px 14px',borderRadius:20,border:'1.5px solid',cursor:'pointer',
+              background: groupBy===opt.val ? 'var(--primary)' : 'white',
+              color: groupBy===opt.val ? 'white' : 'var(--gray-600)',
+              borderColor: groupBy===opt.val ? 'var(--primary)' : 'var(--gray-200)'}}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {monthExpenses.length === 0 ? (
+        <div className="card"><EmptyState message="No hay gastos programados para este mes"/></div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {groupedExpenses.map(section => {
+            const open = isGroupOpen(section.key);
+            const sTotalBag = sumByCurrency(section.items, e=>parseFloat(e.amount)||0, e=>e.currency);
+            return (
+              <div key={section.key} className="card" style={{padding:0,overflow:'hidden'}}>
+                {/* Accordion header */}
+                <div onClick={()=>toggleGroup(section.key)}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+                    padding:'10px 16px',cursor:'pointer',background:'var(--gray-50)',
+                    borderBottom: open ? '1px solid var(--gray-100)' : 'none'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <span style={{fontSize:12,color:'var(--gray-400)',transition:'transform .2s',
+                      transform: open ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
+                    <span style={{fontWeight:600,fontSize:14}}>{section.label}</span>
+                    <span style={{fontSize:12,color:'var(--gray-500)',background:'var(--gray-100)',
+                      padding:'1px 8px',borderRadius:10}}>{section.items.length}</span>
+                  </div>
+                  <span style={{fontWeight:600,fontSize:13,color:'var(--gray-700)'}}><FmtMulti totals={sTotalBag}/></span>
+                </div>
+                {/* Accordion body */}
+                {open && (
+                  <table style={{margin:0}}>
+                    <thead><tr><th></th><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Cuenta</th><th>Tipo</th><th>Ejecutado</th><th></th></tr></thead>
+                    <tbody>
+                      {section.items.map(exp => {
+                        const overdue = isExpenseOverdue(exp);
+                        return (
+                          <tr key={exp.id} style={{opacity: exp.executed ? 0.55 : 1}}>
+                            <td style={{width:24}}>
+                              {overdue && <span title="Vencido sin ejecutar" style={{color:'var(--danger)',fontSize:16}}>⚠️</span>}
+                            </td>
+                            <td style={{fontSize:12,color:'var(--gray-500)',whiteSpace:'nowrap'}}>{exp.date}</td>
+                            <td style={{fontWeight:500}}>{exp.description}</td>
+                            <td style={{fontSize:12}}>{getCatName(exp.categoryId)}</td>
+                            <td style={{fontWeight:600}}>{fmt(parseFloat(exp.amount)||0,exp.currency)}</td>
+                            <td>
+                              <ExpenseEstadoSelect value={exp.accountId}
+                                onChange={v=>updateData({expenses:data.expenses.map(i=>i.id===exp.id?{...i,accountId:v}:i)})}/>
+                            </td>
+                            <td>
+                              {exp.type==='puntual'
+                                ? <span className="badge badge-blue">Puntual</span>
+                                : <span className="badge badge-yellow">{recurrenceLabel(exp.recurrence)}</span>
+                              }
+                            </td>
+                            <td style={{textAlign:'center'}}>
+                              <input type="checkbox" className="checkbox" checked={!!exp.executed}
+                                onChange={()=>updateData({expenses:data.expenses.map(i=>i.id===exp.id?{...i,executed:!i.executed}:i)})}
+                                title="Marcar como ejecutado"/>
+                            </td>
+                            <td style={{display:'flex',gap:4}}>
+                              <button className="btn-icon" onClick={()=>handleEdit(exp)}>{Icons.edit}</button>
+                              <button className="btn-icon" onClick={()=>handleDelete(exp)}>{Icons.trash}</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* New / Edit form modal */}
+      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal?.item?.id ? 'Editar gasto' : 'Nuevo gasto programado'}>
+        {modal && <GastoForm item={modal.item} editScope={modal.editScope} onClose={()=>setModal(null)}/>}
+      </Modal>
+
+      {/* Simple delete confirm for puntual items */}
+      <ConfirmDialog open={!!confirmDel} message="¿Eliminar este gasto programado?"
+        onConfirm={()=>{updateData({expenses:data.expenses.filter(i=>i.id!==confirmDel.id)});showToast('Eliminado');setConfirmDel(null);}}
+        onCancel={()=>setConfirmDel(null)}/>
+
+      {/* Recurrence scope dialog (edit or delete) */}
+      {recAction && (
+        <div className="modal-overlay" onClick={()=>setRecAction(null)}>
+          <div className="modal" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
+            <p style={{marginBottom:16,fontSize:14,fontWeight:600}}>
+              {recAction.action==='delete'?'¿Qué deseas eliminar?':'¿Qué deseas editar?'}
+            </p>
+            <p style={{fontSize:12,color:'var(--gray-500)',marginBottom:16}}>
+              Este gasto forma parte de una serie recurrente ({recurrenceLabel(recAction.item.recurrence)}).
+            </p>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <button className="btn btn-outline" style={{justifyContent:'flex-start'}} onClick={()=>executeRecAction('single')}>
+                Solo este gasto
+              </button>
+              <button className="btn btn-outline" style={{justifyContent:'flex-start'}} onClick={()=>executeRecAction('thisAndFuture')}>
+                Este y todos los siguientes
+              </button>
+              <button className="btn btn-outline" style={{justifyContent:'flex-start',color:'var(--danger)'}} onClick={()=>executeRecAction('all')}>
+                Todos los de la serie
+              </button>
+            </div>
+            <div style={{marginTop:12,display:'flex',justifyContent:'flex-end'}}>
+              <button className="btn btn-outline btn-sm" onClick={()=>setRecAction(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============ CC HELPERS ============
+function calcStartMonth(dateStr) {
+  const parts = dateStr.split('-').map(Number);
+  const y = parts[0], m = parts[1], d = parts[2];
+  if (d <= 15) return `${y}-${String(m).padStart(2,'0')}`;
+  const next = new Date(y, m, 1); // m is 1-based, so new Date(y, m, 1) is next month
+  return getMonthKey(next);
+}
+
+function getCCPaymentForMonth(item, month) {
+  if (!item.startMonth) return 0;
+  const [sy,sm] = item.startMonth.split('-').map(Number);
+  const [my,mm] = month.split('-').map(Number);
+  const diff = (my - sy) * 12 + (mm - sm);
+
+  // Effective interest rate: check per-month overrides, then base rate
+  const overrides = item.interestRateOverrides || {};
+  const rate = overrides[month] !== undefined ? overrides[month] : (parseFloat(item.interestRate)||0);
+  const applyRate = (base) => rate > 0 ? Math.round(base * (1 + rate / 100)) : base;
+
+  if (item.type === 'subscription') {
+    if (diff < 0) return 0;
+    if (item.endMonth) {
+      const [ey,em] = item.endMonth.split('-').map(Number);
+      if ((my - ey) * 12 + (mm - em) > 0) return 0;
+    }
+    return applyRate(parseFloat(item.totalAmount) || 0);
+  }
+
+  const n = parseInt(item.installments) || 1;
+  if (n <= 1) return diff === 0 ? applyRate(parseFloat(item.totalAmount)||0) : 0;
+  if (diff >= 0 && diff < n) return applyRate(Math.round((parseFloat(item.totalAmount)||0) / n));
+  return 0;
+}
+
+function getCCItemsDueInMonth(creditCardItems, month) {
+  return creditCardItems.filter(i => getCCPaymentForMonth(i, month) > 0);
+}
+
+// ============ CREDIT CARD PAGE ============
+function CreditCardPage() {
+  const { data, updateData, showToast } = useApp();
+  const [month, setMonth] = useState(currentMonthKey());
+  const [modal, setModal] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [openCards, setOpenCards] = useState({});
+
+  const toggleCard = (id) => setOpenCards(prev => ({...prev, [id]: !prev[id]}));
+
+  // Auto-compute startMonth from purchaseDate
+  const autoStartMonth = (dateStr) => dateStr ? calcStartMonth(dateStr) : currentMonthKey();
+
+  function CCForm({ item, defaults, onClose }) {
+    const defaultCard = data.creditCards[0]?.id || '';
+    const src = item || defaults || {};
+    const initDate = src.purchaseDate || today();
+    const initType = src.type || 'single';
+    const initCard = data.creditCards.find(c=>c.id===(src.cardId||defaultCard));
+    const defaultRate = initType === 'installment' ? (initCard?.monthlyInterestRate||0) : 0;
+    const [form, setForm] = useState({
+      cardId: src.cardId || defaultCard,
+      purchaseDate: initDate,
+      description: src.description || '',
+      totalAmount: src.totalAmount || '',
+      installments: src.installments || 1,
+      type: initType,
+      interestRate: src.interestRate ?? defaultRate,
+      interestRateOverrides: src.interestRateOverrides || {},
+      startMonth: src.startMonth || src.month || autoStartMonth(initDate),
+      endMonth: src.endMonth || '',
+      notes: src.notes || ''
+    });
+    const set = (k,v) => setForm(f => ({...f, [k]:v}));
+
+    // Recalculate startMonth when purchaseDate changes (only if user hasn't manually edited it)
+    const [startMonthManual, setStartMonthManual] = useState(!!(item?.id));
+    const handleDateChange = (v) => {
+      set('purchaseDate', v);
+      if (!startMonthManual) set('startMonth', autoStartMonth(v));
+    };
+    // Auto-default interest: cuotas → card rate, otros → 0. Solo si no se editó manualmente
+    const [interestManual, setInterestManual] = useState(!!(item?.id));
+    const handleTypeChange = (newType) => {
+      set('type', newType);
+      if (!interestManual) {
+        const card = data.creditCards.find(c=>c.id===form.cardId);
+        set('interestRate', newType === 'installment' ? (card?.monthlyInterestRate||0) : 0);
+      }
+    };
+    const handleCardChange = (cardId) => {
+      set('cardId', cardId);
+      if (!interestManual && form.type === 'installment') {
+        const card = data.creditCards.find(c=>c.id===cardId);
+        set('interestRate', card?.monthlyInterestRate||0);
+      }
+    };
+
+    const save = () => {
+      if (!form.totalAmount || !form.cardId) return;
+      const entry = { ...form, totalAmount: parseFloat(form.totalAmount), installments: parseInt(form.installments)||1, interestRate: parseFloat(form.interestRate)||0 };
+      if (item?.id) { updateData({ creditCard: data.creditCard.map(i => i.id === item.id ? {...item,...entry} : i) }); }
+      else { updateData({ creditCard: [...data.creditCard, {...entry, id:uid()}] }); }
+      showToast(item?.id ? 'Actualizado' : 'Cargo registrado');
+      onClose();
+    };
+
+    const card = data.creditCards.find(c=>c.id===form.cardId);
+
+    return (
+      <div>
+        {data.creditCards.length === 0 && <div style={{padding:'10px 12px',background:'var(--warning-light)',borderRadius:8,fontSize:13,marginBottom:12,color:'var(--warning)'}}>Primero crea una tarjeta en Configuración → Tarjetas</div>}
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Tarjeta</label>
+            <select className="form-input" value={form.cardId} onChange={e=>handleCardChange(e.target.value)}>
+              <option value="">— Selecciona —</option>
+              {data.creditCards.filter(c=>c.active).map(c=><option key={c.id} value={c.id}>{c.name} {c.lastFour?`(••${c.lastFour})`:''}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Tipo</label>
+            <select className="form-input" value={form.type} onChange={e=>handleTypeChange(e.target.value)}>
+              <option value="single">Pago único (diferido)</option>
+              <option value="installment">Compra a cuotas</option>
+              <option value="subscription">Suscripción (pago recurrente)</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-group"><label className="form-label">Descripción</label><input className="form-input" value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Ej: Supermercado / Televisor / Netflix"/></div>
+        <div className="form-row form-row-3">
+          <div className="form-group">
+            <label className="form-label">{form.type==='subscription' ? 'Monto mensual' : 'Monto total'}</label>
+            <input className="form-input" type="number" value={form.totalAmount} onChange={e=>set('totalAmount',e.target.value)}/>
+          </div>
+          {form.type === 'installment' && <div className="form-group"><label className="form-label">Número de cuotas</label><input className="form-input" type="number" min="2" value={form.installments} onChange={e=>set('installments',e.target.value)}/></div>}
+          <div className="form-group"><label className="form-label">Fecha de inicio / compra</label><input className="form-input" type="date" value={form.purchaseDate} onChange={e=>handleDateChange(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Interés mensual (%)</label><input className="form-input" type="number" step="0.01" min="0" value={form.interestRate} onChange={e=>{set('interestRate',e.target.value);setInterestManual(true);}}/></div>
+        </div>
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Mes en que inicia el pago</label>
+            <input className="form-input" type="month" value={form.startMonth} onChange={e=>{set('startMonth',e.target.value);setStartMonthManual(true);}}/>
+            <span style={{fontSize:11,color:'var(--gray-400)',marginTop:3,display:'block'}}>Auto: 1-15 → mismo mes · 16-31 → mes siguiente</span>
+          </div>
+          {form.type === 'subscription' && (
+            <div className="form-group">
+              <label className="form-label">Último mes de pago</label>
+              <input className="form-input" type="month" value={form.endMonth||''} onChange={e=>set('endMonth',e.target.value||null)}/>
+              <span style={{fontSize:11,color:'var(--gray-400)',marginTop:3,display:'block'}}>Dejar vacío si es indefinida</span>
+            </div>
+          )}
+        </div>
+        {form.totalAmount && form.type==='installment' && parseInt(form.installments)>1 && (
+          <div style={{padding:'8px 12px',background:'var(--primary-light)',borderRadius:8,fontSize:13,marginBottom:12}}>
+            {(() => { const base=Math.round(parseFloat(form.totalAmount||0)/parseInt(form.installments||1)); const rate=parseFloat(form.interestRate)||0; const withInt=Math.round(base*(1+rate/100)); const cur=card?.currency||'COP'; return <>Cuota mensual: <strong>{fmt(withInt,cur)}</strong>{rate>0&&<span style={{color:'var(--gray-500)'}}> (base {fmt(base,cur)} + {rate}% interés)</span>} por {form.installments} meses desde {formatMonthLabel(form.startMonth||currentMonthKey())}</>; })()}
+          </div>
+        )}
+        {form.totalAmount && form.type==='subscription' && (
+          <div style={{padding:'8px 12px',background:'#f3e8ff',borderRadius:8,fontSize:13,marginBottom:12}}>
+            Pago mensual: <strong>{fmt(parseFloat(form.totalAmount||0), card?.currency||'COP')}</strong> desde {formatMonthLabel(form.startMonth||currentMonthKey())}{form.endMonth ? ` hasta ${formatMonthLabel(form.endMonth)}` : ' (indefinida)'}
+          </div>
+        )}
+        <div className="form-group"><label className="form-label">Notas</label><input className="form-input" value={form.notes||''} onChange={e=>set('notes',e.target.value)}/></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save} disabled={!form.cardId||!form.totalAmount}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Group items by card
+  const itemsByCard = useMemo(() => {
+    const map = {};
+    data.creditCards.forEach(c => { map[c.id] = []; });
+    data.creditCard.forEach(i => {
+      if (!map[i.cardId]) map[i.cardId] = [];
+      map[i.cardId].push(i);
+    });
+    return map;
+  }, [data.creditCards, data.creditCard]);
+
+  const getItemCurrency = (i) => { const c = data.creditCards.find(c=>c.id===i.cardId); return c?.currency||'COP'; };
+  const totalThisMonthBag = sumByCurrency(data.creditCard, i=>getCCPaymentForMonth(i,month), getItemCurrency);
+
+  // Deuda a Capital: monto base restante sin intereses
+  const calcRemainingCapital = (i) => {
+    const amt = parseFloat(i.totalAmount)||0;
+    const [ny,nm] = currentMonthKey().split('-').map(Number);
+    if (i.type === 'subscription') {
+      if (!i.endMonth) return null;
+      const [ey,em] = i.endMonth.split('-').map(Number);
+      return Math.max(0, (ey-ny)*12+(em-nm)+1) * amt;
+    }
+    const n = parseInt(i.installments)||1;
+    const [sy,sm] = (i.startMonth||currentMonthKey()).split('-').map(Number);
+    const remaining = Math.max(0, n - Math.max(0,(ny-sy)*12+(nm-sm)));
+    return Math.round(amt / Math.max(n,1)) * remaining;
+  };
+  // Deuda a Intereses: cuánto se pagará en intereses sobre el capital restante
+  const calcRemainingInterest = (i) => {
+    const cap = calcRemainingCapital(i);
+    if (cap === null) return null;
+    return Math.round(cap * (parseFloat(i.interestRate)||0) / 100);
+  };
+
+  const hasIndefiniteSubs = data.creditCard.some(i=>i.type==='subscription'&&!i.endMonth&&getCCPaymentForMonth(i,month)>0);
+  const totalCapitalDebtBag = sumByCurrency(data.creditCard.filter(i=>calcRemainingCapital(i)!=null), i=>calcRemainingCapital(i), getItemCurrency);
+  const totalInterestDebtBag = sumByCurrency(data.creditCard.filter(i=>calcRemainingInterest(i)!=null), i=>calcRemainingInterest(i), getItemCurrency);
+
+  const chevronIcon = (open) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m6 9 6 6 6-6"/>
+    </svg>
+  );
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+        <div><h2>Créditos y suscripciones</h2><p>Gastos diferidos, compras a cuotas y suscripciones por tarjeta</p></div>
+        <button className="btn btn-primary" onClick={()=>setModal({item:null})}>{Icons.plus} Nuevo cargo</button>
+      </div>
+      <MonthSelector month={month} onChange={setMonth}/>
+      <div className="stat-grid" style={{marginTop:16}}>
+        <div className="stat-card"><div className="stat-label">A pagar en {formatMonthLabel(month)}</div><div className="stat-value" style={{color:'var(--danger)'}}><FmtMulti totals={totalThisMonthBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Deuda a Capital{hasIndefiniteSubs?' *':''}</div><div className="stat-value" style={{fontSize:20}}><FmtMulti totals={totalCapitalDebtBag}/>{hasIndefiniteSubs&&<span style={{fontSize:12,color:'var(--gray-400)',fontWeight:400}}> +∞</span>}</div>{hasIndefiniteSubs&&<div style={{fontSize:11,color:'var(--gray-400)'}}>* No incluye suscripciones indefinidas</div>}</div>
+        <div className="stat-card"><div className="stat-label">Deuda a Intereses{hasIndefiniteSubs?' *':''}</div><div className="stat-value" style={{fontSize:20,color:'var(--warning)'}}><FmtMulti totals={totalInterestDebtBag}/>{hasIndefiniteSubs&&<span style={{fontSize:12,color:'var(--gray-400)',fontWeight:400}}> +∞</span>}</div></div>
+        <div className="stat-card"><div className="stat-label">Tarjetas activas</div><div className="stat-value">{data.creditCards.filter(c=>c.active).length}</div></div>
+      </div>
+
+      {data.creditCards.length === 0 ? (
+        <div className="card"><EmptyState message="No hay tarjetas configuradas. Ve a Configuración → Tarjetas para crear una."/></div>
+      ) : data.creditCards.filter(c=>c.active).map(card => {
+        const cardItems = itemsByCard[card.id] || [];
+        const cardPayThisMonth = cardItems.reduce((s,i)=>s+getCCPaymentForMonth(i,month),0);
+        const cardCapital = cardItems.reduce((s,i)=>{ const v=calcRemainingCapital(i); return v!=null?s+v:s; },0);
+        const cardInterest = cardItems.reduce((s,i)=>{ const v=calcRemainingInterest(i); return v!=null?s+v:s; },0);
+        const cardTotalDebt = cardCapital + cardInterest;
+        const cardHasIndefSubs = cardItems.some(i=>i.type==='subscription'&&!i.endMonth);
+        const isOpen = !!openCards[card.id];
+
+        return (
+          <div key={card.id} className="accordion">
+            <div className="accordion-header" onClick={()=>toggleCard(card.id)}>
+              <div className="cc-dot" style={{background:card.color}}/>
+              <div>
+                <div style={{fontWeight:600,fontSize:14}}>{card.name} {card.lastFour && <span style={{fontFamily:'monospace',color:'var(--gray-400)',fontSize:12}}>••••{card.lastFour}</span>}</div>
+                <div style={{fontSize:12,color:'var(--gray-400)'}}>{card.bank}</div>
+              </div>
+              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:16}}>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:11,color:'var(--gray-400)'}}>Pago {formatMonthLabel(month)}</div>
+                  <div style={{fontWeight:700,color:'var(--danger)',fontSize:15}}>{fmt(cardPayThisMonth, card.currency)}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:11,color:'var(--gray-400)'}}>Deuda total</div>
+                  <div style={{fontWeight:600,fontSize:13}}>{fmt(cardTotalDebt, card.currency)}{cardHasIndefSubs&&<span style={{fontSize:11,color:'var(--gray-400)'}}> +∞</span>}</div>
+                </div>
+                <div className={`accordion-chevron ${isOpen?'open':''}`}>{chevronIcon(isOpen)}</div>
+              </div>
+            </div>
+            {isOpen && (
+              <div className="accordion-body">
+                {cardItems.length === 0 ? (
+                  <div style={{padding:20,textAlign:'center',color:'var(--gray-400)',fontSize:13}}>No hay cargos en esta tarjeta</div>
+                ) : (
+                  <table style={{margin:0}}>
+                    <thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Monto</th><th>Detalle</th><th>Pago en {formatMonthLabel(month)}</th><th>Vigencia</th><th></th></tr></thead>
+                    <tbody>
+                      {cardItems.sort((a,b)=>b.purchaseDate.localeCompare(a.purchaseDate)).map(i => {
+                        const payment = getCCPaymentForMonth(i, month);
+                        const n = parseInt(i.installments)||1;
+                        const [sy,sm] = (i.startMonth||currentMonthKey()).split('-').map(Number);
+                        const [my,mm] = month.split('-').map(Number);
+                        const installmentNum = (my-sy)*12+(mm-sm)+1;
+                        const isSub = i.type==='subscription';
+                        const isActive = payment > 0;
+                        return (
+                          <tr key={i.id} style={isActive?{background:'#fef9ec'}:isSub&&!isActive?{opacity:0.55}:{}}>
+                            <td>{i.purchaseDate}</td>
+                            <td style={{fontWeight:500}}>{i.description}</td>
+                            <td>
+                              {i.type==='installment' && <span className="badge badge-yellow">Cuotas</span>}
+                              {i.type==='single' && <span className="badge badge-blue">Diferido</span>}
+                              {isSub && <span className="badge" style={{background:'#f3e8ff',color:'#7c3aed'}}>Suscripción</span>}
+                            </td>
+                            <td>{fmt(parseFloat(i.totalAmount)||0, card.currency)}</td>
+                            <td style={{fontSize:12}}>
+                              {i.type==='installment' && `${Math.min(Math.max(installmentNum,1),n)}/${n}`}
+                              {i.type==='single' && '1/1'}
+                              {isSub && <span style={{color:isActive?'var(--success)':'var(--gray-400)'}}>{isActive?'Activa':'Inactiva'}</span>}
+                            </td>
+                            <td style={{fontWeight:600,color:payment>0?'var(--danger)':'var(--gray-300)'}}>{payment>0?fmt(payment,card.currency):'—'}</td>
+                            <td style={{fontSize:12,color:'var(--gray-500)'}}>
+                              {isSub
+                                ? (i.endMonth ? `${formatMonthLabel(i.startMonth)} → ${formatMonthLabel(i.endMonth)}` : `Desde ${formatMonthLabel(i.startMonth||currentMonthKey())}`)
+                                : formatMonthLabel(i.startMonth||currentMonthKey())}
+                            </td>
+                            <td style={{display:'flex',gap:4}}>
+                              <button className="btn-icon" onClick={()=>setModal({item:i})}>{Icons.edit}</button>
+                              <button className="btn-icon" onClick={()=>setConfirmDel(i)}>{Icons.trash}</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+                <div style={{padding:'8px 16px',textAlign:'right'}}>
+                  <button className="btn btn-outline btn-sm" onClick={()=>setModal({item:{cardId:card.id,purchaseDate:today(),startMonth:autoStartMonth(today()),description:'',totalAmount:'',installments:1,type:'single',notes:''}})}>
+                    {Icons.plus} Agregar cargo a {card.name}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Ítems huérfanos: sin tarjeta asignada o con tarjeta eliminada */}
+      {(() => {
+        const orphans = data.creditCard.filter(i => !i.cardId || !data.creditCards.find(c=>c.id===i.cardId));
+        if (!orphans.length) return null;
+        return (
+          <div className="card" style={{borderLeft:'4px solid var(--warning)'}}>
+            <div className="card-header">
+              <span className="card-title" style={{color:'var(--warning)'}}>⚠️ Cargos sin tarjeta asignada ({orphans.length})</span>
+              <span style={{fontSize:12,color:'var(--gray-400)'}}>Edítalos para asignarles una tarjeta</span>
+            </div>
+            <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Total</th><th>Inicio pago</th><th></th></tr></thead>
+            <tbody>{orphans.map(i=>(
+              <tr key={i.id}>
+                <td>{i.purchaseDate||'—'}</td>
+                <td style={{fontWeight:500}}>{i.description}</td>
+                <td>{fmt(parseFloat(i.totalAmount)||0)}</td>
+                <td>{i.startMonth ? formatMonthLabel(i.startMonth) : (i.month ? formatMonthLabel(i.month) : '—')}</td>
+                <td style={{display:'flex',gap:4}}>
+                  <button className="btn-icon" onClick={()=>setModal({item:i})}>{Icons.edit}</button>
+                  <button className="btn-icon" onClick={()=>setConfirmDel(i)}>{Icons.trash}</button>
+                </td>
+              </tr>
+            ))}</tbody></table>
+          </div>
+        );
+      })()}
+
+      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal?.item?.id ? 'Editar cargo' : 'Nuevo cargo TC'}>
+        {modal && <CCForm item={modal.item?.id ? modal.item : null} defaults={modal.item?.id ? null : modal.item} onClose={()=>setModal(null)}/>}
+      </Modal>
+      <ConfirmDialog open={!!confirmDel} message="¿Eliminar este cargo?" onConfirm={()=>{updateData({creditCard:data.creditCard.filter(i=>i.id!==confirmDel.id)});showToast('Eliminado');setConfirmDel(null);}} onCancel={()=>setConfirmDel(null)}/>
+    </div>
+  );
+}
+
+// ============ LOANS GIVEN PAGE ============
+function LoansPage() {
+  const { data, updateData, showToast } = useApp();
+  const [modal, setModal] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [paymentModal, setPaymentModal] = useState(null);       // { loan } for per-loan
+  const [personPayModal, setPersonPayModal] = useState(null);   // { person, loans[] } for per-person
+  const [openPersons, setOpenPersons] = useState({});
+  const [exchangeModal, setExchangeModal] = useState(null);     // { pendingPayment state for cross-currency }
+  const togglePerson = (p) => setOpenPersons(prev => ({...prev, [p]: prev[p] === false ? true : false}));
+  const isPersonOpen = (p) => openPersons[p] !== false;
+
+  const statusLabel = {pending:'Pendiente',partial:'Parcial',paid:'Pagado'};
+  const statusBadge = {pending:'badge-red',partial:'badge-yellow',paid:'badge-green'};
+
+  // Group loans by person
+  const personSections = useMemo(() => {
+    const byPerson = {};
+    (data.loansGiven||[]).forEach(l => {
+      const p = l.person||'Sin nombre';
+      if (!byPerson[p]) byPerson[p] = [];
+      byPerson[p].push(l);
+    });
+    return Object.entries(byPerson).map(([person, loans]) => {
+      loans.sort((a,b) => a.date.localeCompare(b.date));
+      const totalBag = sumByCurrency(loans, l=>l.amount, l=>l.currency);
+      const paidBag = sumByCurrency(loans, l=>(l.payments||[]).reduce((s,p)=>s+p.amount,0), l=>l.currency);
+      const pendingBag = subtractCBags(totalBag, paidBag);
+      const activeCount = loans.filter(l=>l.status!=='paid').length;
+      return { person, loans, totalBag, paidBag, pendingBag, activeCount };
+    }).sort((a,b) => {
+      if (a.activeCount > 0 && b.activeCount === 0) return -1;
+      if (a.activeCount === 0 && b.activeCount > 0) return 1;
+      return a.person.localeCompare(b.person);
+    });
+  }, [data.loansGiven]);
+
+  const totalPendingBag = sumByCurrency(
+    (data.loansGiven||[]).filter(l=>l.status!=='paid'),
+    l => { const paid = (l.payments||[]).reduce((s,p)=>s+p.amount,0); return l.amount - paid; },
+    l => l.currency
+  );
+
+  // ── Forms ──────────────────────────────────────────────
+  function LoanForm({ item, onClose }) {
+    const [form, setForm] = useState(item || { person:'', date:today(), amount:'', currency:'COP', status:'pending', payments:[], notes:'' });
+    const set = (k,v) => setForm({...form,[k]:v});
+    // Suggest existing person names
+    const existingPersons = [...new Set((data.loansGiven||[]).map(l=>l.person).filter(Boolean))];
+    const save = () => {
+      if (!form.person || !form.amount) return;
+      const entry = { ...form, amount:parseFloat(form.amount) };
+      if (item?.id) { updateData({ loansGiven: data.loansGiven.map(i => i.id === item.id ? { ...item, ...entry } : i) }); }
+      else { updateData({ loansGiven: [...data.loansGiven, { ...entry, id: uid() }] }); }
+      showToast(item?.id ? 'Actualizado' : 'Préstamo registrado');
+      onClose();
+    };
+    return (
+      <div>
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Persona</label>
+            <input className="form-input" list="loan-persons" value={form.person} onChange={e=>set('person',e.target.value)} placeholder="Nombre"/>
+            <datalist id="loan-persons">{existingPersons.map(p=><option key={p} value={p}/>)}</datalist>
+          </div>
+          <div className="form-group"><label className="form-label">Fecha</label><input className="form-input" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/></div>
+        </div>
+        <div className="form-row form-row-3">
+          <div className="form-group"><label className="form-label">Monto</label><input className="form-input" type="number" value={form.amount} onChange={e=>set('amount',e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Moneda</label><select className="form-input" value={form.currency} onChange={e=>set('currency',e.target.value)}><option value="COP">COP</option><option value="USD">USD</option></select></div>
+          <div className="form-group"><label className="form-label">Estado</label><select className="form-input" value={form.status} onChange={e=>set('status',e.target.value)}><option value="pending">Pendiente</option><option value="partial">Parcial</option><option value="paid">Pagado</option></select></div>
+        </div>
+        <div className="form-group"><label className="form-label">Notas</label><input className="form-input" value={form.notes||''} onChange={e=>set('notes',e.target.value)}/></div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Per-loan payment form
+  function PaymentForm({ loan, onClose }) {
+    const [amount, setAmount] = useState('');
+    const [date, setDate] = useState(today());
+    const [notes, setNotes] = useState('');
+    const save = () => {
+      if (!amount) return;
+      const payment = { id: uid(), date, amount: parseFloat(amount), currency: loan.currency, notes };
+      const payments = [...(loan.payments||[]), payment];
+      const totalPaid = payments.reduce((s,p)=>s+p.amount,0);
+      const status = totalPaid >= loan.amount ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
+      updateData({ loansGiven: data.loansGiven.map(i => i.id === loan.id ? { ...i, payments, status } : i) });
+      showToast('Abono registrado');
+      onClose();
+    };
+    return (
+      <div>
+        <p style={{fontSize:13,color:'var(--gray-500)',marginBottom:12}}>Préstamo a {loan.person} por {fmt(loan.amount,loan.currency)}</p>
+        <div className="form-row form-row-3">
+          <div className="form-group"><label className="form-label">Fecha</label><input className="form-input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Monto ({loan.currency})</label><input className="form-input" type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Nota (opc.)</label><input className="form-input" value={notes} onChange={e=>setNotes(e.target.value)}/></div>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-success" onClick={save}>Registrar abono</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Per-person payment form — distributes to oldest first, same-currency first
+  function PersonPaymentForm({ person, loans, onClose }) {
+    const [amount, setAmt] = useState('');
+    const [currency, setCurrency] = useState('COP');
+    const [date, setDate] = useState(today());
+    const [notes, setNotes] = useState('');
+    const [exchangeRate, setExchangeRate] = useState('');
+    const [showExchange, setShowExchange] = useState(false);
+
+    const activeLoans = loans.filter(l=>l.status!=='paid').sort((a,b)=>a.date.localeCompare(b.date));
+    const hasSameCur = activeLoans.some(l=>l.currency===currency);
+    const hasOtherCur = activeLoans.some(l=>l.currency!==currency);
+    const needsExchange = !hasSameCur || (hasSameCur && hasOtherCur);
+
+    const preview = useMemo(() => {
+      if (!amount) return [];
+      let remaining = parseFloat(amount)||0;
+      const rate = parseFloat(exchangeRate)||0;
+      const result = [];
+      // Same currency first
+      const sameCur = activeLoans.filter(l=>l.currency===currency);
+      const diffCur = activeLoans.filter(l=>l.currency!==currency);
+      const sorted = [...sameCur, ...diffCur];
+      for (const l of sorted) {
+        if (remaining <= 0) break;
+        const paid = (l.payments||[]).reduce((s,p)=>s+p.amount,0);
+        const owing = l.amount - paid;
+        if (owing <= 0) continue;
+        if (l.currency === currency) {
+          const apply = Math.min(remaining, owing);
+          result.push({ loanId: l.id, applyAmount: apply, currency: l.currency, loanDesc: `${l.date} — ${fmtStr(l.amount, l.currency)}` });
+          remaining -= apply;
+        } else if (rate > 0) {
+          // Convert remaining to loan currency
+          const remainingConverted = remaining * rate;
+          const apply = Math.min(remainingConverted, owing);
+          const spent = apply / rate;
+          result.push({ loanId: l.id, applyAmount: apply, currency: l.currency, loanDesc: `${l.date} — ${fmtStr(l.amount, l.currency)}`, converted: true, spent });
+          remaining -= spent;
+        }
+      }
+      return result;
+    }, [amount, currency, exchangeRate, activeLoans]);
+
+    const save = () => {
+      if (!amount || preview.length === 0) return;
+      let updated = [...data.loansGiven];
+      preview.forEach(p => {
+        updated = updated.map(l => {
+          if (l.id !== p.loanId) return l;
+          const payment = { id: uid(), date, amount: p.applyAmount, currency: p.currency, notes: notes + (p.converted ? ` (convertido desde ${currency})` : '') };
+          const payments = [...(l.payments||[]), payment];
+          const totalPaid = payments.reduce((s,pp)=>s+pp.amount,0);
+          const status = totalPaid >= l.amount ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
+          return { ...l, payments, status };
+        });
+      });
+      updateData({ loansGiven: updated });
+      showToast(`Abono distribuido en ${preview.length} préstamo${preview.length!==1?'s':''}`);
+      onClose();
+    };
+
+    return (
+      <div>
+        <p style={{fontSize:13,color:'var(--gray-500)',marginBottom:12}}>Abonar a préstamos de <strong>{person}</strong> ({activeLoans.length} activo{activeLoans.length!==1?'s':''})</p>
+        <div className="form-row form-row-3">
+          <div className="form-group"><label className="form-label">Fecha</label><input className="form-input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Monto</label><input className="form-input" type="number" value={amount} onChange={e=>setAmt(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Moneda del abono</label><select className="form-input" value={currency} onChange={e=>setCurrency(e.target.value)}><option value="COP">COP</option><option value="USD">USD</option></select></div>
+        </div>
+        {!hasSameCur && hasOtherCur && amount && (
+          <div style={{padding:'8px 12px',background:'var(--warning-light)',borderRadius:8,fontSize:12,color:'var(--warning)',marginBottom:12}}>
+            No hay deudas en {currency}. Se necesita tipo de cambio para distribuir.
+          </div>
+        )}
+        {hasSameCur && hasOtherCur && amount && parseFloat(amount) > 0 && (
+          <div style={{padding:'8px 12px',background:'var(--primary-light)',borderRadius:8,fontSize:12,color:'var(--primary)',marginBottom:12}}>
+            Si sobra dinero después de las deudas en {currency}, se puede aplicar a deudas en otra moneda.
+            <button className="btn btn-outline btn-sm" style={{marginLeft:8,fontSize:11}} onClick={()=>setShowExchange(!showExchange)}>
+              {showExchange ? 'Ocultar' : 'Definir tipo de cambio'}
+            </button>
+          </div>
+        )}
+        {(showExchange || (!hasSameCur && hasOtherCur)) && (
+          <div className="form-group">
+            <label className="form-label">Tipo de cambio (1 {currency} = ? {activeLoans.find(l=>l.currency!==currency)?.currency})</label>
+            <input className="form-input" type="number" step="any" value={exchangeRate} onChange={e=>setExchangeRate(e.target.value)} placeholder="Ej: 4200"/>
+          </div>
+        )}
+        <div className="form-group"><label className="form-label">Nota (opc.)</label><input className="form-input" value={notes} onChange={e=>setNotes(e.target.value)}/></div>
+        {preview.length > 0 && (
+          <div style={{marginTop:12,padding:'10px 12px',background:'var(--gray-50)',borderRadius:8,fontSize:12}}>
+            <div style={{fontWeight:600,marginBottom:6}}>Distribución del abono:</div>
+            {preview.map((p,i) => (
+              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'3px 0',borderBottom:'1px solid var(--gray-100)'}}>
+                <span style={{color:'var(--gray-500)'}}>{p.loanDesc}</span>
+                <span style={{fontWeight:600}}>{fmt(p.applyAmount, p.currency)}{p.converted && <span style={{fontSize:10,color:'var(--gray-400)',marginLeft:4}}>(convertido)</span>}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-success" disabled={preview.length===0} onClick={save}>Distribuir abono</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment history tooltip
+  function PaidCell({ loan }) {
+    const [showTip, setShowTip] = useState(false);
+    const paid = (loan.payments||[]).reduce((s,p)=>s+p.amount,0);
+    const payments = loan.payments||[];
+    return (
+      <td style={{color:'var(--success)',position:'relative'}}
+        onMouseEnter={()=>payments.length>0&&setShowTip(true)}
+        onMouseLeave={()=>setShowTip(false)}>
+        {fmt(paid, loan.currency)}
+        {showTip && payments.length > 0 && (
+          <div style={{position:'absolute',bottom:'100%',left:0,background:'white',border:'1px solid var(--gray-200)',
+            borderRadius:8,padding:'8px 12px',boxShadow:'0 4px 12px rgba(0,0,0,0.15)',zIndex:100,minWidth:220,fontSize:12}}>
+            <div style={{fontWeight:600,marginBottom:6,color:'var(--gray-700)'}}>Historial de abonos</div>
+            {payments.map((p,i) => (
+              <div key={i} style={{display:'flex',justifyContent:'space-between',gap:12,padding:'2px 0',borderBottom:i<payments.length-1?'1px solid var(--gray-100)':'none'}}>
+                <span style={{color:'var(--gray-500)'}}>{p.date}</span>
+                <span style={{fontWeight:500}}>{fmt(p.amount, p.currency||loan.currency)}</span>
+              </div>
+            ))}
+            {payments.some(p=>p.notes) && payments.filter(p=>p.notes).map((p,i) => (
+              <div key={`n${i}`} style={{fontSize:11,color:'var(--gray-400)',marginTop:4}}>{p.date}: {p.notes}</div>
+            ))}
+          </div>
+        )}
+      </td>
+    );
+  }
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+        <div><h2>Préstamos otorgados</h2><p>Dinero que has prestado a otras personas</p></div>
+        <button className="btn btn-primary" onClick={()=>setModal({item:null})}>{Icons.plus} Nuevo préstamo</button>
+      </div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-label">Total por cobrar</div><div className="stat-value" style={{color:'var(--warning)'}}><FmtMulti totals={totalPendingBag}/></div></div>
+        <div className="stat-card"><div className="stat-label">Préstamos activos</div><div className="stat-value">{(data.loansGiven||[]).filter(l=>l.status!=='paid').length}</div></div>
+        <div className="stat-card"><div className="stat-label">Personas</div><div className="stat-value">{personSections.length}</div></div>
+      </div>
+
+      {personSections.length === 0 ? (
+        <div className="card"><EmptyState message="No hay préstamos registrados"/></div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {personSections.map(section => {
+            const open = isPersonOpen(section.person);
+            return (
+              <div key={section.person} className="accordion">
+                <div className="accordion-header" onClick={()=>togglePerson(section.person)}>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontWeight:600,fontSize:14}}>{section.person}</span>
+                      <span style={{fontSize:12,color:'var(--gray-500)',background:'var(--gray-100)',padding:'1px 8px',borderRadius:10}}>
+                        {section.loans.length} préstamo{section.loans.length!==1?'s':''}
+                      </span>
+                      {section.activeCount === 0 && <span className="badge badge-green" style={{fontSize:10}}>Todo pagado</span>}
+                    </div>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:12,marginLeft:12}}>
+                    {section.activeCount > 0 && (
+                      <button className="btn btn-sm btn-success" style={{fontSize:11}} onClick={e=>{e.stopPropagation();setPersonPayModal({person:section.person,loans:section.loans});}}>
+                        Abonar por persona
+                      </button>
+                    )}
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:11,color:'var(--gray-400)'}}>Pendiente</div>
+                      <div style={{fontWeight:700,fontSize:14}}><FmtMulti totals={section.pendingBag}/></div>
+                    </div>
+                    <div className={`accordion-chevron ${open?'open':''}`}>{chevDown}</div>
+                  </div>
+                </div>
+                {open && (
+                  <div className="accordion-body">
+                    <table style={{margin:0}}>
+                      <thead><tr><th>Fecha</th><th>Monto</th><th>Abonado</th><th>Saldo</th><th>Estado</th><th>Notas</th><th></th></tr></thead>
+                      <tbody>
+                        {section.loans.map(l => {
+                          const paid = (l.payments||[]).reduce((s,p)=>s+p.amount,0);
+                          const saldo = l.amount - paid;
+                          return (
+                            <tr key={l.id} style={{opacity:l.status==='paid'?0.55:1}}>
+                              <td style={{fontSize:12,color:'var(--gray-500)'}}>{l.date}</td>
+                              <td>{fmt(l.amount,l.currency)}</td>
+                              <PaidCell loan={l}/>
+                              <td style={{fontWeight:600,color:saldo>0?'var(--danger)':'var(--success)'}}>{fmt(saldo,l.currency)}</td>
+                              <td><span className={`badge ${statusBadge[l.status]}`}>{statusLabel[l.status]}</span></td>
+                              <td style={{fontSize:12,color:'var(--gray-500)',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.notes||'—'}</td>
+                              <td style={{display:'flex',gap:4}}>
+                                {l.status !== 'paid' && <button className="btn btn-sm btn-success" style={{fontSize:11}} onClick={()=>setPaymentModal(l)}>Abonar</button>}
+                                <button className="btn-icon" onClick={()=>setModal({item:l})}>{Icons.edit}</button>
+                                <button className="btn-icon" onClick={()=>setConfirmDel(l)}>{Icons.trash}</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Modal open={!!modal} onClose={()=>setModal(null)} title={modal?.item?.id ? 'Editar préstamo' : 'Nuevo préstamo'}>
+        {modal && <LoanForm item={modal.item} onClose={()=>setModal(null)}/>}
+      </Modal>
+      <Modal open={!!paymentModal} onClose={()=>setPaymentModal(null)} title="Registrar abono">
+        {paymentModal && <PaymentForm loan={paymentModal} onClose={()=>setPaymentModal(null)}/>}
+      </Modal>
+      <Modal open={!!personPayModal} onClose={()=>setPersonPayModal(null)} title="Abonar por persona">
+        {personPayModal && <PersonPaymentForm person={personPayModal.person} loans={personPayModal.loans} onClose={()=>setPersonPayModal(null)}/>}
+      </Modal>
+      <ConfirmDialog open={!!confirmDel} message="¿Eliminar este préstamo?" onConfirm={()=>{updateData({loansGiven:data.loansGiven.filter(i=>i.id!==confirmDel.id)});showToast('Eliminado');setConfirmDel(null);}} onCancel={()=>setConfirmDel(null)}/>
+    </div>
+  );
+}
+
+// ============ DASHBOARD ============
+function DashboardPage() {
+  const { data } = useApp();
+  const month = currentMonthKey();
+  const monthIncome = data.income.filter(i=>i.month===month);
+  const monthExpenses = data.expenses.filter(i=>i.month===month);
+  const monthBudget = data.budget.filter(i=>i.month===month);
+  const monthCC = data.creditCard.filter(i=>i.month===month);
+
+  const dGetItemCur = (i) => { const c = data.creditCards.find(c=>c.id===i.cardId); return c?.currency||'COP'; };
+  const dIncomeBag = sumByCurrency(monthIncome, i=>i.amount, i=>i.currency);
+  const dExpensesBag = sumByCurrency(monthExpenses, i=>i.amount, i=>i.currency);
+  const dBudgetBag = sumByCurrency(monthBudget, i=>i.plannedAmount, i=>i.currency||'COP');
+  const dCCPayBag = sumByCurrency(monthCC, i=>i.type==='installment'?(i.installmentAmount||Math.round(i.totalAmount/i.installments)):i.totalAmount, dGetItemCur);
+  const dLoansBag = sumByCurrency(
+    data.loansGiven.filter(l=>l.status!=='paid'),
+    l=>{const paid=(l.payments||[]).reduce((s,p)=>s+p.amount,0);return l.amount-paid;},
+    l=>l.currency
+  );
+
+  const expByCategory = {};
+  monthExpenses.forEach(e => {
+    const cat = data.expenseCategories.find(c=>c.id===e.categoryId);
+    const key = cat ? cat.name : 'Otros';
+    const icon = cat ? cat.icon : '📋';
+    const cur = e.currency||'COP';
+    if (!expByCategory[key]) expByCategory[key] = { bag:{}, icon };
+    expByCategory[key].bag[cur] = (expByCategory[key].bag[cur]||0) + e.amount;
+  });
+
+  const dGastosTCBag = addCBags(dExpensesBag, dCCPayBag);
+  const dBalanceBag = subtractCBags(dIncomeBag, dGastosTCBag);
+  const dPresupRestosBag = subtractCBags(dBudgetBag, dExpensesBag);
+
+  return (
+    <div>
+      <div className="page-header"><h2>Dashboard</h2><p>{formatMonthLabel(month)}</p></div>
+      <div className="stat-grid">
+        <div className="stat-card" style={{borderLeft:'4px solid var(--success)'}}>
+          <div className="stat-label">Ingresos del mes</div>
+          <div className="stat-value" style={{color:'var(--success)'}}><FmtMulti totals={dIncomeBag}/></div>
+        </div>
+        <div className="stat-card" style={{borderLeft:'4px solid var(--danger)'}}>
+          <div className="stat-label">Gastos + TC</div>
+          <div className="stat-value" style={{color:'var(--danger)'}}><FmtMulti totals={dGastosTCBag}/></div>
+        </div>
+        <div className="stat-card" style={{borderLeft:'4px solid var(--primary)'}}>
+          <div className="stat-label">Balance del mes</div>
+          <div className="stat-value"><FmtMulti totals={dBalanceBag}/></div>
+        </div>
+        <div className="stat-card" style={{borderLeft:'4px solid var(--warning)'}}>
+          <div className="stat-label">Presupuesto restante</div>
+          <div className="stat-value"><FmtMulti totals={dPresupRestosBag}/></div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="card">
+          <div className="card-title" style={{marginBottom:12}}>Gastos por categoría</div>
+          {Object.keys(expByCategory).length === 0 ? <p style={{color:'var(--gray-400)',fontSize:13}}>Sin gastos este mes</p> :
+          Object.entries(expByCategory).sort((a,b)=>{const va=Object.values(b[1].bag).reduce((s,v)=>s+v,0);const vb=Object.values(a[1].bag).reduce((s,v)=>s+v,0);return va-vb;}).map(([name,{bag,icon}]) => (
+            <div key={name} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--gray-100)'}}>
+              <span style={{fontSize:13}}>{icon} {name}</span>
+              <span style={{fontWeight:600,fontSize:13}}><FmtMulti totals={bag}/></span>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <div className="card-title" style={{marginBottom:12}}>Resumen general</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,padding:'6px 0'}}>
+              <span>TC a pagar este mes</span><span style={{fontWeight:600,color:'var(--danger)'}}><FmtMulti totals={dCCPayBag}/></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ============ DATA EXPORT / IMPORT ============
+function DataPage() {
+  const { data, setData, showToast } = useApp();
+
+  const exportData = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `finanzas_backup_${today()}.json`; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Datos exportados');
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        const merged = { ...defaultData, ...imported };
+        // Asegurar que cuentas importadas de V1 tengan color
+        if (merged.accounts) {
+          const COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+          merged.accounts = merged.accounts.map((a, i) => ({
+            ...a,
+            color: a.color || COLORS[i % COLORS.length]
+          }));
+        }
+        saveData(merged);
+        setData(merged);
+        showToast('Datos importados correctamente');
+      } catch(err) { showToast('Error al importar: archivo inválido'); }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div>
+      <div className="page-header"><h2>Datos</h2><p>Exportar e importar tus datos</p></div>
+      <div className="card">
+        <h3 style={{fontSize:15,fontWeight:600,marginBottom:12}}>Respaldo de datos</h3>
+        <p style={{fontSize:13,color:'var(--gray-500)',marginBottom:16}}>Tus datos se guardan localmente en el navegador. Te recomendamos hacer respaldos periódicos.</p>
+        <div style={{display:'flex',gap:12}}>
+          <button className="btn btn-primary" onClick={exportData}>{Icons.download} Exportar JSON</button>
+          <label className="btn btn-outline" style={{cursor:'pointer'}}>
+            Importar JSON
+            <input type="file" accept=".json" onChange={importData} style={{display:'none'}}/>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ MAIN APP ============
+function App() {
+  const [data, setDataState] = useState(loadData);
+  const [page, setPage] = useState('dashboard');
+  const [toast, setToast] = useState('');
+
+  const updateData = useCallback((partial) => {
+    setDataState(prev => {
+      const next = { ...prev, ...partial };
+      saveData(next);
+      return next;
+    });
+  }, []);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2000);
+  }, []);
+
+  const ctx = useMemo(() => ({ data, updateData, showToast, setData: (d) => { setDataState(d); saveData(d); } }), [data, updateData, showToast]);
+
+  const navItems = [
+    { id:'dashboard', label:'Dashboard', icon: Icons.dashboard },
+    { section: 'REGISTRO' },
+    { id:'income', label:'Ingresos', icon: Icons.income },
+    { id:'budget', label:'Presupuesto', icon: Icons.budget },
+    { id:'expenses', label:'Gastos programados', icon: Icons.expense },
+    { id:'creditcard', label:'Créditos y suscripciones', icon: Icons.creditcard },
+    { section: 'SEGUIMIENTO' },
+    { id:'loans', label:'Préstamos', icon: Icons.loan },
+    { section: 'OTROS' },
+    { id:'config', label:'Configuración', icon: Icons.config },
+    { id:'data', label:'Datos', icon: Icons.download },
+  ];
+
+  return (
+    <AppContext.Provider value={ctx}>
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <h1>Finanzas</h1>
+          <p>Fidel Cossio</p>
+        </div>
+        {navItems.map((item, i) =>
+          item.section ? <div key={i} className="nav-section">{item.section}</div> :
+          <div key={item.id} className={`nav-item ${page===item.id?'active':''}`} onClick={()=>setPage(item.id)}>
+            {item.icon}<span>{item.label}</span>
+          </div>
+        )}
+      </div>
+      <div className="main">
+        {page === 'dashboard' && <DashboardPage/>}
+        {page === 'income' && <IncomePage/>}
+        {page === 'budget' && <BudgetPage/>}
+        {page === 'expenses' && <ExpensesPage/>}
+        {page === 'creditcard' && <CreditCardPage/>}
+        {page === 'loans' && <LoansPage/>}
+        {page === 'config' && <ConfigPage/>}
+        {page === 'data' && <DataPage/>}
+      </div>
+      <Toast message={toast}/>
+    </AppContext.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
