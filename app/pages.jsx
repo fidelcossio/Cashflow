@@ -430,7 +430,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <CategoryDot category={cat}/>
                 </div>
                 <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({editEntry:b.id,data:b})}>
-                  <div className="tx-title truncate">{b.description||cat?.name||'—'}</div>
+                  <div className="tx-title truncate" style={b.executed?{textDecoration:'line-through'}:{}}>{b.description||cat?.name||'—'}</div>
                   <div className="tx-sub">{b.isFixed===false?'Variable':'Fija'}</div>
                 </button>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
@@ -459,7 +459,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <CategoryDot category={cc.category}/>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
-                  <div className="tx-title truncate">{cc.description}</div>
+                  <div className="tx-title truncate" style={cc.executed?{textDecoration:'line-through'}:{}}>{cc.description}</div>
                   <div className="tx-sub">
                     <span className={`chip ${ccTypeChip(cc.type)}`} style={{fontSize:9,padding:'0 4px',marginRight:4}}>{ccTypeLabel(cc.type)}</span>
                     {cc.type==='installment'&&`${cc.installNum}/${cc.installTotal} · `}
@@ -493,7 +493,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <CategoryDot category={exp.category}/>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
-                  <div className="tx-title truncate">{exp.description||exp.catLabel}</div>
+                  <div className="tx-title truncate" style={exp.executed?{textDecoration:'line-through'}:{}}>{exp.description||exp.catLabel}</div>
                   <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
                     {exp.recurrenceGroupId && <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>}
                     <span>{formatDate(exp.date)}</span>
@@ -779,7 +779,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                         <CategoryDot category={cat}/>
                       </div>
                       <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>handleEdit(exp)}>
-                        <div className="tx-title truncate">
+                        <div className="tx-title truncate" style={exp.executed?{textDecoration:'line-through'}:{}}>
                           {overdue && <span style={{color:'var(--negative)',marginRight:4}}>⚠</span>}
                           {exp.description||cat?.name||'Gasto'}
                         </div>
