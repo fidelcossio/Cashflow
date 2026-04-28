@@ -1001,8 +1001,8 @@ function CreditPage({ data, setData, month, setMonth }) {
                             <button className="btn-ico sm" onClick={e=>{e.stopPropagation();delItem(i.id);}}>
                               <Icon.trash size={12}/>
                             </button>
-                            <div className="amount-sm" style={{color:isActive?'var(--negative)':'var(--text-3)'}}>
-                              {isActive?<><span className="ccy-tag">{card.currency||'COP'}</span>{fmtNum(pay,card.currency||'COP')}</>:'—'}
+                            <div className="amount-sm" style={{color:'var(--negative)',flexShrink:0}}>
+                              <span className="ccy-tag">{card.currency||'COP'}</span>{fmtNum(pay,card.currency||'COP')}
                             </div>
                           </div>
                         </div>;
