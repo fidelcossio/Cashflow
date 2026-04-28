@@ -474,6 +474,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <div className="tx-sub">Gasto programado</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                  <button className="btn-ico sm"
+                    style={{color:exp.executed?'var(--positive)':'var(--text-3)'}}
+                    title={exp.executed?'Marcar pendiente':'Marcar ejecutado'}
+                    onClick={e=>{e.stopPropagation();setData(d=>({...d,expenses:(d.expenses||[]).map(x=>x.id===exp.expId?{...x,executed:!x.executed}:x)}));}}>
+                    <Icon.check size={14}/>
+                  </button>
                   <span className="amount-sm" style={{flexShrink:0}}><span className="ccy-tag">{exp.currency}</span>{fmtNum(exp.plannedAmount,exp.currency)}</span>
                 </div>
               </div>
@@ -750,8 +756,6 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                         </div>
                       </button>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
-                        <AccSelect value={exp.accountId}
-                          onChange={v=>setData(d=>({...d,expenses:d.expenses.map(x=>x.id===exp.id?{...x,accountId:v}:x)}))}/>
                         <button className="btn-ico sm"
                           style={{color:exp.executed?'var(--positive)':'var(--text-3)'}}
                           title={exp.executed?'Marcar pendiente':'Marcar ejecutado'}
