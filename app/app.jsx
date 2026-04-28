@@ -8,7 +8,7 @@ const NAV = [
   { id: 'dashboard', label: 'Inicio', icon: 'home' },
   { id: 'income', label: 'Ingresos', icon: 'income' },
   { id: 'budget', label: 'Presupuesto', icon: 'budget' },
-  { id: 'expenses', label: 'Gastos', icon: 'expense' },
+  { id: 'expenses', label: 'Gastos compartidos', icon: 'expense' },
   { id: 'credit', label: 'Tarjetas', icon: 'card' },
   { id: 'loans', label: 'Préstamos', icon: 'loan' },
   { id: 'config', label: 'Ajustes', icon: 'cog' },

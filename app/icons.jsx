@@ -87,6 +87,9 @@ const Icon = {
   pieChart: Ico(<><path d="M21.2 15a9 9 0 1 1-9.5-12.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>),
   receipt: Ico(<><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2V2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></>),
   gift: Ico(<><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>),
+  paw: Ico(<><circle cx="7" cy="5.5" r="1.8"/><circle cx="17" cy="5.5" r="1.8"/><circle cx="3.5" cy="11" r="1.8"/><circle cx="20.5" cy="11" r="1.8"/><path d="M12 22c-2.8 0-5-2-5-4.5 0-1.8.9-3.3 2.5-4h5c1.6.7 2.5 2.2 2.5 4 0 2.5-2.2 4.5-5 4.5z"/></>),
+  briefcase: Ico(<><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 12h20"/></>),
+  dumbbell: Ico(<><path d="M6 4v16"/><path d="M18 4v16"/><path d="M3 7v10"/><path d="M21 7v10"/><path d="M6 12h12"/></>),
 };
 
 window.Icon = Icon;

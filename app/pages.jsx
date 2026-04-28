@@ -139,7 +139,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
   const toggleGroup = (k) => setOpenGroups(p => ({...p, [k]: !p[k]}));
   const [dragItem, setDragItem] = usS(null);
   const [dragOverGroup, setDragOverGroup] = usS(null);
-  const canDrag = true; // enabled in both group and account views
+  const canDrag = groupBy !== 'category'; // disabled in category view
   const dragRef = usR(false); // tracks whether mousedown was on the drag handle
   const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
   const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
@@ -243,7 +243,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
         const sExpItems = expVirtual.filter(i => (i.groupId||null) === g.id);
         return { ...g, gKey, sEntries, sCCItems, sExpItems };
       }).filter(s => s.id === null || s.sEntries.length || s.sCCItems.length || s.sExpItems.length);
-    } else {
+    } else if (groupBy === 'account') {
       const byAcc = {};
       const put = (key, kind, item) => { if (!byAcc[key]) byAcc[key]={entries:[],cc:[],exp:[]}; byAcc[key][kind].push(item); };
       monthEntries.forEach(e => put(e.accountId||'__none__','entries',e));
@@ -254,8 +254,19 @@ function BudgetPage({ data, setData, month, setMonth }) {
         const acc = key==='__none__' ? null : data.accounts.find(a=>a.id===key);
         return { id:key, name:acc?acc.name:'Planificado', goal:null, gKey:key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp };
       }).sort((a,b) => a.id==='__none__'?-1:b.id==='__none__'?1:a.name.localeCompare(b.name));
+    } else {
+      // category view
+      const byCat = {};
+      const put = (key, kind, item) => { if (!byCat[key]) byCat[key]={entries:[],cc:[],exp:[]}; byCat[key][kind].push(item); };
+      monthEntries.forEach(e => put(e.categoryId||'__none__','entries',e));
+      ccVirtual.forEach(e => put(e.category?.id||'__none__','cc',e));
+      expVirtual.forEach(e => put(e.category?.id||'__none__','exp',e));
+      return Object.entries(byCat).map(([key,v]) => {
+        const cat = key==='__none__' ? null : data.expenseCategories.find(c=>c.id===key);
+        return { id:key, name:cat?.name||'Sin categoría', goal:null, gKey:'cat_'+key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp };
+      }).sort((a,b) => a.name.localeCompare(b.name));
     }
-  }, [groupBy, groups, monthEntries, ccVirtual, expVirtual, data.accounts]);
+  }, [groupBy, groups, monthEntries, ccVirtual, expVirtual, data.accounts, data.expenseCategories]);
 
   // Inline EstadoSelect — same style as IncomePage AccountSelect
   const EstadoSelect = ({ value, onChange }) => (
@@ -351,7 +362,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
     </div>
 
     <div className="row" style={{ justifyContent:'space-between', alignItems:'center' }}>
-      <Segmented value={groupBy} onChange={setGroupBy} options={[{value:'group',label:'Por grupo'},{value:'account',label:'Por cuenta'}]}/>
+      <Segmented value={groupBy} onChange={setGroupBy} options={[{value:'group',label:'Por grupo'},{value:'account',label:'Por cuenta'},{value:'category',label:'Por categoría'}]}/>
       <button className="btn btn-ghost btn-sm" onClick={() => setModal('notes')}>
         <Icon.edit size={13}/> Anotaciones
       </button>
@@ -501,7 +512,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
             ))}
             {totalCount===0 && <div className="muted-2" style={{textAlign:'center',fontSize:13,padding:'8px 0'}}>Sin entradas · <button className="btn btn-ghost btn-sm" style={{fontSize:12}} onClick={()=>setModal('new-entry')}>+ Agregar</button></div>}
           </div>
-          {groupBy==='group' && <div className="card-pad" style={{paddingTop:0}}>
+          {groupBy==='group' && section.id && <div className="card-pad" style={{paddingTop:0}}>
             <button className="btn btn-ghost btn-sm" style={{fontSize:12}} onClick={()=>setModal('new-entry')}>
               <Icon.plus size={12}/> Agregar a este grupo
             </button>
@@ -574,7 +585,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
   const isOpen = (k) => openGroups[k] !== false;
   const [dragItem, setDragItem] = usS(null);
   const [dragOverGroup, setDragOverGroup] = usS(null);
-  const canDrag = true; // enabled in both group and account views
+  const canDrag = groupBy !== 'category'; // disabled in category view
   const dragRef = usR(false);
   const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
   const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
@@ -613,15 +624,22 @@ function ExpensesPage({ data, setData, month, setMonth }) {
       return order.filter(k=>byGroup[k]?.length>0).map(k=>({
         key:k, label:k==='__none__'?'Sin grupo':(groups.find(g=>g.id===k)?.name||'Sin grupo'), items:byGroup[k]
       }));
-    } else {
+    } else if (groupBy==='account') {
       const byAcc = {};
       monthExpenses.forEach(exp => { const k=exp.accountId||'__none__'; if(!byAcc[k])byAcc[k]=[]; byAcc[k].push(exp); });
       return Object.entries(byAcc).map(([k,items]) => {
         const acc = k==='__none__'?null:data.accounts.find(a=>a.id===k);
         return { key:k, label:acc?acc.name:'Planificado', items };
       }).sort((a,b)=>a.label==='Planificado'?-1:b.label==='Planificado'?1:a.label.localeCompare(b.label));
+    } else {
+      const byCat = {};
+      monthExpenses.forEach(exp => { const k=exp.categoryId||'__none__'; if(!byCat[k])byCat[k]=[]; byCat[k].push(exp); });
+      return Object.entries(byCat).map(([k,items]) => {
+        const cat = k==='__none__'?null:data.expenseCategories.find(c=>c.id===k);
+        return { key:k, label:cat?.name||'Sin categoría', items };
+      }).sort((a,b)=>a.label.localeCompare(b.label));
     }
-  }, [monthExpenses, groupBy, groups, data.accounts]);
+  }, [monthExpenses, groupBy, groups, data.accounts, data.expenseCategories]);
 
   // Inline account selector — same style as IncomePage AccountSelect
   const AccSelect = ({value, onChange}) => (
@@ -709,7 +727,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
 
   return <div className="page col-5">
     {confirmNode}
-    <PageHeader title="Gastos" subtitle="Gastos planificados y recurrentes"
+    <PageHeader title="Gastos compartidos" subtitle="Gastos planificados y recurrentes"
       right={<>
         <MonthPicker month={month} onChange={setMonth}/>
         <button className="btn btn-primary" onClick={()=>setModal('new')}><Icon.plus size={16}/> Nuevo</button>
@@ -721,7 +739,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
       <Card pad="md"><Stat label="⚠ Vencidos" value={overdueCount} tone={overdueCount>0?'neg':'pos'}/></Card>
     </div>
 
-    <Segmented value={groupBy} onChange={setGroupBy} options={[{value:'group',label:'Por grupo'},{value:'account',label:'Por cuenta'}]}/>
+    <Segmented value={groupBy} onChange={setGroupBy} options={[{value:'group',label:'Por grupo'},{value:'account',label:'Por cuenta'},{value:'category',label:'Por categoría'}]}/>
 
     {monthExpenses.length===0
       ? <Card pad="md"><Empty icon="receipt" title="Sin gastos este mes" desc="Registra tu primer gasto."
@@ -1453,6 +1471,7 @@ function ConfigPage({ data, setData, theme, setTheme }) {
       {k:'sun',l:'Vacaciones'},{k:'moon',l:'Noche'},{k:'pieChart',l:'Estadística'},{k:'bullseye',l:'Objetivo'},
       {k:'send',l:'Envíos'},{k:'refresh',l:'Recurrente'},{k:'alert',l:'Urgente'},{k:'data',l:'Internet'},
       {k:'budget',l:'Presupuesto'},{k:'expense',l:'Gastos'},{k:'spark',l:'Destello'},{k:'eye',l:'Revisión'},
+      {k:'paw',l:'Mascotas'},{k:'briefcase',l:'Trabajo'},{k:'dumbbell',l:'Ejercicio'},
     ];
     const [name,setName] = usS(item?.name||'');
     const [icon,setIcon] = usS(item?.icon||'tag');

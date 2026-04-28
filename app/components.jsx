@@ -86,6 +86,7 @@ const CATEGORY_ICON = {
   'trendingDown':'trendingDown','bell':'bell','flag':'flag','sun':'sun','moon':'moon',
   'pieChart':'pieChart','bullseye':'bullseye','send':'send','refresh':'refresh',
   'alert':'alert','data':'data','spark':'spark','eye':'eye',
+  'paw':'paw','briefcase':'briefcase','dumbbell':'dumbbell',
 };
 function CategoryDot({ category, size = 40 }) {
   if (!category) return <div className="tx-icon cat-8"><Icon.tag size={18} /></div>;
