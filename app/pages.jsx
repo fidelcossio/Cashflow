@@ -2,7 +2,7 @@
 // PAGES — Income, Budget, Expenses, Credit Cards, Loans, Config
 // ============================================================
 
-const { useState: usS, useEffect: usE, useMemo: usM, useCallback: usC } = React;
+const { useState: usS, useEffect: usE, useMemo: usM, useCallback: usC, useRef: usR } = React;
 
 // ═══════════════════════════════════════════════════════════
 // INCOME
@@ -139,25 +139,41 @@ function BudgetPage({ data, setData, month, setMonth }) {
   const toggleGroup = (k) => setOpenGroups(p => ({...p, [k]: !p[k]}));
   const [dragItem, setDragItem] = usS(null);
   const [dragOverGroup, setDragOverGroup] = usS(null);
-  const canDrag = groupBy === 'group';
+  const canDrag = true; // enabled in both group and account views
+  const dragRef = usR(false); // tracks whether mousedown was on the drag handle
   const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
   const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
   const handleDragOver = (e, gKey) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverGroup !== gKey) setDragOverGroup(gKey); };
-  const handleDrop = (e, gKey, targetGroupId) => {
+  const handleDrop = (e, gKey, section) => {
     e.preventDefault();
-    if (!dragItem || dragItem.groupId === targetGroupId) { setDragItem(null); setDragOverGroup(null); return; }
-    if (dragItem._fromCC) {
-      const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==dragItem.ccKey);
-      const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===dragItem.ccKey);
-      setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:dragItem.ccKey,accountId:dragItem.accountId||null}),groupId:targetGroupId}]}));
-    } else if (dragItem._fromExp) {
-      setData(d=>({...d,expenses:(d.expenses||[]).map(i=>i.id===dragItem.expId?{...i,groupId:targetGroupId}:i)}));
+    if (!dragItem || dragItem.sectionKey === gKey) { setDragItem(null); setDragOverGroup(null); return; }
+    if (groupBy === 'group') {
+      const targetGroupId = section.id;
+      if (dragItem._fromCC) {
+        const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==dragItem.ccKey);
+        const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===dragItem.ccKey);
+        setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:dragItem.ccKey,accountId:dragItem.accountId||null}),groupId:targetGroupId}]}));
+      } else if (dragItem._fromExp) {
+        setData(d=>({...d,expenses:(d.expenses||[]).map(i=>i.id===dragItem.expId?{...i,groupId:targetGroupId}:i)}));
+      } else {
+        setData(d=>({...d,budget:d.budget.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+      }
+      toast('Entrada movida al grupo');
     } else {
-      setData(d=>({...d,budget:d.budget.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+      const targetAccId = section.id === '__none__' ? null : section.id;
+      if (dragItem._fromCC) {
+        const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==dragItem.ccKey);
+        const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===dragItem.ccKey);
+        setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:dragItem.ccKey,groupId:dragItem.groupId||null}),accountId:targetAccId}]}));
+      } else if (dragItem._fromExp) {
+        setData(d=>({...d,expenses:(d.expenses||[]).map(i=>i.id===dragItem.expId?{...i,accountId:targetAccId}:i)}));
+      } else {
+        setData(d=>({...d,budget:d.budget.map(i=>i.id===dragItem.id?{...i,accountId:targetAccId}:i)}));
+      }
+      toast('Cuenta asignada');
     }
     setOpenGroups(p=>({...p,[gKey]:true}));
     setDragItem(null); setDragOverGroup(null);
-    toast('Entrada movida al grupo');
   };
 
   const groups = data.budgetGroups || [];
@@ -345,10 +361,10 @@ function BudgetPage({ data, setData, month, setMonth }) {
       const barTone = rawPct===null?'default':rawPct>140?'negative':rawPct>110?'warning':rawPct>=99?'positive':'default';
       const isOpen = !!openGroups[gKey];
 
-      const isDragTarget = canDrag && dragOverGroup === gKey && dragItem?.groupId !== section.id;
+      const isDragTarget = canDrag && dragOverGroup === gKey && dragItem?.sectionKey !== gKey;
       return <Card key={gKey} pad="none" style={{ marginBottom:8, outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s' }}
         onDragOver={canDrag ? e=>handleDragOver(e,gKey) : undefined}
-        onDrop={canDrag ? e=>handleDrop(e,gKey,section.id) : undefined}
+        onDrop={canDrag ? e=>handleDrop(e,gKey,section) : undefined}
         onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
         {/* Header */}
         <button className="card-pad row-between" style={{ width:'100%', textAlign:'left', cursor:'pointer' }}
@@ -384,11 +400,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {sEntries.map(b => {
               const cat = data.expenseCategories.find(c=>c.id===b.categoryId);
               return <div key={b.id} className="tx-row"
-                draggable={canDrag}
-                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{id:b.id,_fromCC:false,groupId:section.id});} : undefined}
-                onDragEnd={canDrag ? handleDragEnd : undefined}
+                draggable={true}
+                onMouseDown={e=>{ dragRef.current = !!e.target.closest('[data-dh]'); }}
+                onDragStart={e=>{ if(!dragRef.current){e.preventDefault();return;} handleDragStart(e,{id:b.id,_fromCC:false,sectionKey:gKey,groupId:section.id,accountId:b.accountId}); }}
+                onDragEnd={handleDragEnd}
                 style={{opacity:b.executed?0.6:dragItem?.id===b.id?0.4:1}}>
-                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                <div data-dh style={{cursor:'grab',display:'contents'}}>
                   <CategoryDot category={cat}/>
                 </div>
                 <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({editEntry:b.id,data:b})}>
@@ -396,8 +413,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <div className="tx-sub">{b.isFixed===false?'Variable':'Fija'}</div>
                 </button>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                  <EstadoSelect value={b.accountId}
-                    onChange={v=>setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,accountId:v}:x)}))}/>
                   <button className="btn-ico sm"
                     style={{color:b.executed?'var(--positive)':'var(--text-3)'}}
                     title={b.executed?'Marcar pendiente':'Marcar ejecutado'}
@@ -414,11 +429,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {/* CC virtual items */}
             {sCCItems.map(cc => (
               <div key={cc.id} className="tx-row"
-                draggable={canDrag}
-                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,accountId:cc.accountId,groupId:section.id});} : undefined}
-                onDragEnd={canDrag ? handleDragEnd : undefined}
+                draggable={true}
+                onMouseDown={e=>{ dragRef.current = !!e.target.closest('[data-dh]'); }}
+                onDragStart={e=>{ if(!dragRef.current){e.preventDefault();return;} handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,sectionKey:gKey,groupId:section.id,accountId:cc.accountId}); }}
+                onDragEnd={handleDragEnd}
                 style={{opacity:cc.executed?0.6:dragItem?.ccKey===cc.ccKey?0.4:1}}>
-                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                <div data-dh style={{cursor:'grab',display:'contents'}}>
                   <div className="tx-icon" style={{background:cc.cardColor+'22',color:cc.cardColor}}>
                     <Icon.card size={14}/>
                   </div>
@@ -428,12 +444,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   <div className="tx-sub">{cc.cardName} · {cc.label}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                  <EstadoSelect value={cc.accountId}
-                    onChange={v=>{
-                      const asgns=(data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==cc.ccKey);
-                      const existing=(data.ccBudgetAssignments||[]).find(a=>a.ccKey===cc.ccKey);
-                      setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:cc.ccKey}),accountId:v}]}));
-                    }}/>
                   <button className="btn-ico sm"
                     style={{color:cc.executed?'var(--positive)':'var(--text-3)'}}
                     title={cc.executed?'Marcar pendiente':'Marcar ejecutado'}
@@ -451,11 +461,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {/* showInBudget expense items */}
             {sExpItems.map(exp => (
               <div key={exp.id} className="tx-row"
-                draggable={canDrag}
-                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{expId:exp.expId,_fromExp:true,groupId:section.id});} : undefined}
-                onDragEnd={canDrag ? handleDragEnd : undefined}
+                draggable={true}
+                onMouseDown={e=>{ dragRef.current = !!e.target.closest('[data-dh]'); }}
+                onDragStart={e=>{ if(!dragRef.current){e.preventDefault();return;} handleDragStart(e,{expId:exp.expId,_fromExp:true,sectionKey:gKey,groupId:section.id,accountId:exp.accountId}); }}
+                onDragEnd={handleDragEnd}
                 style={{opacity:exp.executed?0.6:dragItem?.expId===exp.expId?0.4:1}}>
-                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                <div data-dh style={{cursor:'grab',display:'contents'}}>
                   <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
@@ -542,17 +553,25 @@ function ExpensesPage({ data, setData, month, setMonth }) {
   const isOpen = (k) => openGroups[k] !== false;
   const [dragItem, setDragItem] = usS(null);
   const [dragOverGroup, setDragOverGroup] = usS(null);
-  const canDrag = groupBy === 'group';
+  const canDrag = true; // enabled in both group and account views
+  const dragRef = usR(false);
   const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
   const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
   const handleDragOver = (e, gKey) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverGroup !== gKey) setDragOverGroup(gKey); };
-  const handleDrop = (e, gKey, targetGroupId) => {
+  const handleDrop = (e, gKey, section) => {
     e.preventDefault();
-    if (!dragItem || dragItem.groupId === targetGroupId) { setDragItem(null); setDragOverGroup(null); return; }
-    setData(d=>({...d, expenses:d.expenses.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+    if (!dragItem || dragItem.sectionKey === gKey) { setDragItem(null); setDragOverGroup(null); return; }
+    if (groupBy === 'group') {
+      const targetGroupId = section.key === '__none__' ? null : section.key;
+      setData(d=>({...d, expenses:d.expenses.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+      toast('Gasto movido al grupo');
+    } else {
+      const targetAccId = section.key === '__none__' ? null : section.key;
+      setData(d=>({...d, expenses:d.expenses.map(i=>i.id===dragItem.id?{...i,accountId:targetAccId}:i)}));
+      toast('Cuenta asignada');
+    }
     setOpenGroups(p=>({...p,[gKey]:p[gKey]===false?true:p[gKey]}));
     setDragItem(null); setDragOverGroup(null);
-    toast('Gasto movido al grupo');
   };
 
   const groups = data.budgetGroups || [];
@@ -690,11 +709,11 @@ function ExpensesPage({ data, setData, month, setMonth }) {
           {grouped.map(section => {
             const open = isOpen(section.key);
             const sTotalBag = sumByCurrency(section.items, e=>parseFloat(e.amount)||0, e=>e.currency);
-            const isDragTarget = canDrag && dragOverGroup === section.key && dragItem?.groupId !== section.key;
+            const isDragTarget = canDrag && dragOverGroup === section.key && dragItem?.sectionKey !== section.key;
             return <Card key={section.key} pad="none"
               style={{outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s'}}
               onDragOver={canDrag ? e=>handleDragOver(e,section.key) : undefined}
-              onDrop={canDrag ? e=>handleDrop(e,section.key,section.key==='__none__'?null:section.key) : undefined}
+              onDrop={canDrag ? e=>handleDrop(e,section.key,section) : undefined}
               onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
               <button className="card-pad row-between" style={{width:'100%',textAlign:'left',cursor:'pointer',borderRadius:0}}
                 onClick={()=>{ if (!dragItem) toggleGroup(section.key); }}>
@@ -712,12 +731,14 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                     const cat = data.expenseCategories.find(c=>c.id===exp.categoryId);
                     const overdue = isExpenseOverdue(exp);
                     return <div key={exp.id} className="tx-row"
-                      draggable={canDrag}
-                      onDragStart={canDrag ? e=>handleDragStart(e,{id:exp.id,groupId:section.key==='__none__'?null:section.key}) : undefined}
-                      onDragEnd={canDrag ? handleDragEnd : undefined}
-                      style={{opacity:exp.executed?0.6:dragItem?.id===exp.id?0.4:1, cursor:canDrag?'grab':'default'}}>
-                      {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
-                      <CategoryDot category={cat}/>
+                      draggable={true}
+                      onMouseDown={e=>{ dragRef.current = !!e.target.closest('[data-dh]'); }}
+                      onDragStart={e=>{ if(!dragRef.current){e.preventDefault();return;} handleDragStart(e,{id:exp.id,sectionKey:section.key,groupId:section.key==='__none__'?null:section.key,accountId:exp.accountId}); }}
+                      onDragEnd={handleDragEnd}
+                      style={{opacity:exp.executed?0.6:dragItem?.id===exp.id?0.4:1}}>
+                      <div data-dh style={{cursor:'grab',display:'contents'}}>
+                        <CategoryDot category={cat}/>
+                      </div>
                       <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>handleEdit(exp)}>
                         <div className="tx-title truncate">
                           {overdue && <span style={{color:'var(--negative)',marginRight:4}}>⚠</span>}
