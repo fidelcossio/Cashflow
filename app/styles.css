@@ -489,16 +489,22 @@ body {
   width: 100%;
   padding: 11px 14px;
   font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 400;
   background: var(--surface-2);
-  border: 1px solid transparent;
+  border: 1px solid var(--line);
   border-radius: var(--r-2);
   color: var(--text);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
   transition: border-color var(--t-fast), background var(--t-fast);
 }
-.input:hover, .select:hover, .textarea:hover { background: var(--surface-3); }
+.input:hover, .select:hover, .textarea:hover { background: var(--surface-3); border-color: var(--line-strong); }
 .input:focus, .select:focus, .textarea:focus {
   background: var(--surface);
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 .input::placeholder, .textarea::placeholder { color: var(--text-3); }
 

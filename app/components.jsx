@@ -77,16 +77,20 @@ const CATEGORY_SLOT = { // map categoryId or name → cat class
   '6': 'cat-6', '7': 'cat-7', '8': 'cat-8', '9': 'cat-3', '10': 'cat-8',
 };
 const CATEGORY_ICON = {
-  'home': 'home', 'cart': 'cart', 'car': 'car', 'bolt': 'bolt', 'health': 'health',
-  'film': 'film', 'user': 'user', 'shield': 'shield', 'book': 'book', 'tag': 'tag',
+  'home':'home','cart':'cart','car':'car','bolt':'bolt','health':'health',
+  'film':'film','user':'user','shield':'shield','book':'book','tag':'tag',
+  'receipt':'receipt','wallet':'wallet','pin':'pin','card':'card','layers':'layers',
+  'swap':'swap','income':'income','loan':'loan','sparkles':'sparkles','budget':'budget',
+  'expense':'expense','clock':'clock','info':'info','cog':'cog','phone':'phone',
 };
 function CategoryDot({ category, size = 40 }) {
   if (!category) return <div className="tx-icon cat-8"><Icon.tag size={18} /></div>;
   const slot = CATEGORY_SLOT[category.id] || 'cat-8';
-  const iconName = CATEGORY_ICON[category.icon] || 'tag';
-  const IconCmp = Icon[iconName] || Icon.tag;
+  const iconKey = CATEGORY_ICON[category.icon];
+  const IconCmp = iconKey ? (Icon[iconKey] || Icon.tag) : null;
+  const iconSize = Math.round(size * 0.45);
   return <div className={`tx-icon ${slot}`} style={{ width: size, height: size }}>
-    <IconCmp size={Math.round(size * 0.45)} />
+    {IconCmp ? <IconCmp size={iconSize}/> : <span style={{fontSize:iconSize,lineHeight:1}}>{category.icon||'?'}</span>}
   </div>;
 }
 

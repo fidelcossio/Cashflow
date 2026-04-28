@@ -137,6 +137,28 @@ function BudgetPage({ data, setData, month, setMonth }) {
   const [groupBy, setGroupBy] = usS('group');
   const [openGroups, setOpenGroups] = usS({ __sin_grupo: true });
   const toggleGroup = (k) => setOpenGroups(p => ({...p, [k]: !p[k]}));
+  const [dragItem, setDragItem] = usS(null);
+  const [dragOverGroup, setDragOverGroup] = usS(null);
+  const canDrag = groupBy === 'group';
+  const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
+  const handleDragOver = (e, gKey) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverGroup !== gKey) setDragOverGroup(gKey); };
+  const handleDrop = (e, gKey, targetGroupId) => {
+    e.preventDefault();
+    if (!dragItem || dragItem.groupId === targetGroupId) { setDragItem(null); setDragOverGroup(null); return; }
+    if (dragItem._fromCC) {
+      const asgns = (data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==dragItem.ccKey);
+      const existing = (data.ccBudgetAssignments||[]).find(a=>a.ccKey===dragItem.ccKey);
+      setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:dragItem.ccKey,accountId:dragItem.accountId||null}),groupId:targetGroupId}]}));
+    } else if (dragItem._fromExp) {
+      setData(d=>({...d,expenses:(d.expenses||[]).map(i=>i.id===dragItem.expId?{...i,groupId:targetGroupId}:i)}));
+    } else {
+      setData(d=>({...d,budget:d.budget.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+    }
+    setOpenGroups(p=>({...p,[gKey]:true}));
+    setDragItem(null); setDragOverGroup(null);
+    toast('Entrada movida al grupo');
+  };
 
   const groups = data.budgetGroups || [];
   const monthEntries = usM(() => data.budget.filter(i => i.month === month), [data.budget, month]);
@@ -209,10 +231,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
     }
   }, [groupBy, groups, monthEntries, ccVirtual, expVirtual, data.accounts]);
 
-  // Inline EstadoSelect
+  // Inline EstadoSelect — same style as IncomePage AccountSelect
   const EstadoSelect = ({ value, onChange }) => (
-    <select style={{ fontSize:11, padding:'2px 6px', borderRadius:6, cursor:'pointer', maxWidth:120, height:24,
-      background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)', color:value?'var(--warning-color,#B8721A)':'var(--text-2)' }}
+    <select className="select"
+      style={{ fontSize:12, padding:'2px 8px', minWidth:0, maxWidth:150, height:28,
+        background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)',
+        color:value?'var(--warning-color,#B8721A)':'var(--text-2)' }}
       value={value||''} onChange={e=>onChange(e.target.value||null)} onClick={e=>e.stopPropagation()}>
       <option value="">Planificado</option>
       {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
@@ -321,10 +345,14 @@ function BudgetPage({ data, setData, month, setMonth }) {
       const barTone = rawPct===null?'default':rawPct>140?'negative':rawPct>110?'warning':rawPct>=99?'positive':'default';
       const isOpen = !!openGroups[gKey];
 
-      return <Card key={gKey} pad="none" style={{ marginBottom: 8 }}>
+      const isDragTarget = canDrag && dragOverGroup === gKey && dragItem?.groupId !== section.id;
+      return <Card key={gKey} pad="none" style={{ marginBottom:8, outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s' }}
+        onDragOver={canDrag ? e=>handleDragOver(e,gKey) : undefined}
+        onDrop={canDrag ? e=>handleDrop(e,gKey,section.id) : undefined}
+        onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
         {/* Header */}
         <button className="card-pad row-between" style={{ width:'100%', textAlign:'left', cursor:'pointer' }}
-          onClick={() => toggleGroup(gKey)}>
+          onClick={() => { if (!dragItem) toggleGroup(gKey); }}>
           <div className="row" style={{ gap:10 }}>
             <span style={{ fontSize:12, color:'var(--text-3)', transform:isOpen?'rotate(90deg)':'rotate(0)', display:'inline-block', transition:'transform .2s' }}>▶</span>
             <span className="h4">{section.name}</span>
@@ -355,7 +383,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {/* Budget entries */}
             {sEntries.map(b => {
               const cat = data.expenseCategories.find(c=>c.id===b.categoryId);
-              return <div key={b.id} className="tx-row" style={{opacity:b.executed?0.6:1}}>
+              return <div key={b.id} className="tx-row"
+                draggable={canDrag}
+                onDragStart={canDrag ? e=>handleDragStart(e,{id:b.id,_fromCC:false,groupId:section.id}) : undefined}
+                onDragEnd={canDrag ? handleDragEnd : undefined}
+                style={{opacity:b.executed?0.6:dragItem?.id===b.id?0.4:1, cursor:canDrag?'grab':'default'}}>
+                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
                 <CategoryDot category={cat}/>
                 <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({editEntry:b.id,data:b})}>
                   <div className="tx-title truncate">{b.description||cat?.name||'—'}</div>
@@ -364,16 +397,24 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <EstadoSelect value={b.accountId}
                     onChange={v=>setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,accountId:v}:x)}))}/>
-                  <input type="checkbox" checked={!!b.executed}
-                    onChange={()=>setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,executed:!x.executed}:x)}))}
-                    onClick={e=>e.stopPropagation()} style={{width:15,height:15}}/>
+                  <button className="btn-ico sm"
+                    style={{color:b.executed?'var(--positive)':'var(--text-3)'}}
+                    title={b.executed?'Marcar pendiente':'Marcar ejecutado'}
+                    onClick={e=>{e.stopPropagation();setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,executed:!x.executed}:x)}));}}>
+                    <Icon.check size={14}/>
+                  </button>
                   <span className="amount-sm"><span className="ccy-tag">{b.currency||'COP'}</span>{fmtNum(b.plannedAmount,b.currency||'COP')}</span>
                 </div>
               </div>;
             })}
             {/* CC virtual items */}
             {sCCItems.map(cc => (
-              <div key={cc.id} className="tx-row" style={{opacity:cc.executed?0.6:1}}>
+              <div key={cc.id} className="tx-row"
+                draggable={canDrag}
+                onDragStart={canDrag ? e=>handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,accountId:cc.accountId,groupId:section.id}) : undefined}
+                onDragEnd={canDrag ? handleDragEnd : undefined}
+                style={{opacity:cc.executed?0.6:dragItem?.ccKey===cc.ccKey?0.4:1, cursor:canDrag?'grab':'default'}}>
+                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
                 <div className="tx-icon" style={{background:cc.cardColor+'22',color:cc.cardColor}}>
                   <Icon.card size={14}/>
                 </div>
@@ -388,20 +429,28 @@ function BudgetPage({ data, setData, month, setMonth }) {
                       const existing=(data.ccBudgetAssignments||[]).find(a=>a.ccKey===cc.ccKey);
                       setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:cc.ccKey}),accountId:v}]}));
                     }}/>
-                  <input type="checkbox" checked={!!cc.executed}
-                    onChange={()=>{
+                  <button className="btn-ico sm"
+                    style={{color:cc.executed?'var(--positive)':'var(--text-3)'}}
+                    title={cc.executed?'Marcar pendiente':'Marcar ejecutado'}
+                    onClick={e=>{e.stopPropagation();
                       const asgns=(data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==cc.ccKey);
                       const existing=(data.ccBudgetAssignments||[]).find(a=>a.ccKey===cc.ccKey);
                       setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:cc.ccKey}),executed:!cc.executed}]}));
-                    }}
-                    onClick={e=>e.stopPropagation()} style={{width:15,height:15}}/>
+                    }}>
+                    <Icon.check size={14}/>
+                  </button>
                   <span className="amount-sm"><span className="ccy-tag">{cc.currency}</span>{fmtNum(cc.plannedAmount,cc.currency)}</span>
                 </div>
               </div>
             ))}
             {/* showInBudget expense items */}
             {sExpItems.map(exp => (
-              <div key={exp.id} className="tx-row" style={{opacity:exp.executed?0.6:1}}>
+              <div key={exp.id} className="tx-row"
+                draggable={canDrag}
+                onDragStart={canDrag ? e=>handleDragStart(e,{expId:exp.expId,_fromExp:true,groupId:section.id}) : undefined}
+                onDragEnd={canDrag ? handleDragEnd : undefined}
+                style={{opacity:exp.executed?0.6:dragItem?.expId===exp.expId?0.4:1, cursor:canDrag?'grab':'default'}}>
+                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
                 <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{exp.description||exp.catLabel}</div>
@@ -485,6 +534,20 @@ function ExpensesPage({ data, setData, month, setMonth }) {
   const [openGroups, setOpenGroups] = usS({});
   const toggleGroup = (k) => setOpenGroups(p => ({...p, [k]: p[k]===false ? true : false}));
   const isOpen = (k) => openGroups[k] !== false;
+  const [dragItem, setDragItem] = usS(null);
+  const [dragOverGroup, setDragOverGroup] = usS(null);
+  const canDrag = groupBy === 'group';
+  const handleDragStart = (e, item) => { setDragItem(item); e.dataTransfer.effectAllowed = 'move'; };
+  const handleDragEnd = () => { setDragItem(null); setDragOverGroup(null); };
+  const handleDragOver = (e, gKey) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverGroup !== gKey) setDragOverGroup(gKey); };
+  const handleDrop = (e, gKey, targetGroupId) => {
+    e.preventDefault();
+    if (!dragItem || dragItem.groupId === targetGroupId) { setDragItem(null); setDragOverGroup(null); return; }
+    setData(d=>({...d, expenses:d.expenses.map(i=>i.id===dragItem.id?{...i,groupId:targetGroupId}:i)}));
+    setOpenGroups(p=>({...p,[gKey]:p[gKey]===false?true:p[gKey]}));
+    setDragItem(null); setDragOverGroup(null);
+    toast('Gasto movido al grupo');
+  };
 
   const groups = data.budgetGroups || [];
 
@@ -514,10 +577,12 @@ function ExpensesPage({ data, setData, month, setMonth }) {
     }
   }, [monthExpenses, groupBy, groups, data.accounts]);
 
-  // Inline account selector
+  // Inline account selector — same style as IncomePage AccountSelect
   const AccSelect = ({value, onChange}) => (
-    <select style={{fontSize:11,padding:'2px 6px',borderRadius:6,cursor:'pointer',maxWidth:120,height:24,
-      background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)',color:value?'var(--warning-color,#B8721A)':'var(--text-2)'}}
+    <select className="select"
+      style={{fontSize:12, padding:'2px 8px', minWidth:0, maxWidth:150, height:28,
+        background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)',
+        color:value?'var(--warning-color,#B8721A)':'var(--text-2)'}}
       value={value||''} onChange={e=>onChange(e.target.value||null)} onClick={e=>e.stopPropagation()}>
       <option value="">Planificado</option>
       {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
@@ -619,9 +684,14 @@ function ExpensesPage({ data, setData, month, setMonth }) {
           {grouped.map(section => {
             const open = isOpen(section.key);
             const sTotalBag = sumByCurrency(section.items, e=>parseFloat(e.amount)||0, e=>e.currency);
-            return <Card key={section.key} pad="none">
+            const isDragTarget = canDrag && dragOverGroup === section.key && dragItem?.groupId !== section.key;
+            return <Card key={section.key} pad="none"
+              style={{outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s'}}
+              onDragOver={canDrag ? e=>handleDragOver(e,section.key) : undefined}
+              onDrop={canDrag ? e=>handleDrop(e,section.key,section.key==='__none__'?null:section.key) : undefined}
+              onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
               <button className="card-pad row-between" style={{width:'100%',textAlign:'left',cursor:'pointer',borderRadius:0}}
-                onClick={()=>toggleGroup(section.key)}>
+                onClick={()=>{ if (!dragItem) toggleGroup(section.key); }}>
                 <div className="row" style={{gap:10}}>
                   <span style={{fontSize:12,color:'var(--text-3)',transform:open?'rotate(90deg)':'none',display:'inline-block',transition:'transform .2s'}}>▶</span>
                   <span className="h4">{section.label}</span>
@@ -635,7 +705,12 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                   {section.items.map(exp => {
                     const cat = data.expenseCategories.find(c=>c.id===exp.categoryId);
                     const overdue = isExpenseOverdue(exp);
-                    return <div key={exp.id} className="tx-row" style={{opacity:exp.executed?0.6:1}}>
+                    return <div key={exp.id} className="tx-row"
+                      draggable={canDrag}
+                      onDragStart={canDrag ? e=>handleDragStart(e,{id:exp.id,groupId:section.key==='__none__'?null:section.key}) : undefined}
+                      onDragEnd={canDrag ? handleDragEnd : undefined}
+                      style={{opacity:exp.executed?0.6:dragItem?.id===exp.id?0.4:1, cursor:canDrag?'grab':'default'}}>
+                      {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
                       <CategoryDot category={cat}/>
                       <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>handleEdit(exp)}>
                         <div className="tx-title truncate">
@@ -650,9 +725,12 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
                         <AccSelect value={exp.accountId}
                           onChange={v=>setData(d=>({...d,expenses:d.expenses.map(x=>x.id===exp.id?{...x,accountId:v}:x)}))}/>
-                        <input type="checkbox" checked={!!exp.executed}
-                          onChange={()=>setData(d=>({...d,expenses:d.expenses.map(x=>x.id===exp.id?{...x,executed:!x.executed}:x)}))}
-                          onClick={e=>e.stopPropagation()} style={{width:15,height:15}}/>
+                        <button className="btn-ico sm"
+                          style={{color:exp.executed?'var(--positive)':'var(--text-3)'}}
+                          title={exp.executed?'Marcar pendiente':'Marcar ejecutado'}
+                          onClick={e=>{e.stopPropagation();setData(d=>({...d,expenses:d.expenses.map(x=>x.id===exp.id?{...x,executed:!x.executed}:x)}));}}>
+                          <Icon.check size={14}/>
+                        </button>
                         <button className="btn-ico sm" onClick={e=>{e.stopPropagation();handleDelete(exp);}}>
                           <Icon.trash size={12}/>
                         </button>
@@ -1318,19 +1396,40 @@ function ConfigPage({ data, setData, theme, setTheme }) {
   };
 
   const CategoryModalForm = ({item, onClose}) => {
-    const EMOJIS = ['🏠','🛒','🚗','💡','🏥','🎬','👤','🛡','📚','✈️','🎁','📋','💰','🍽','👶','🐕','💻','📱','🏋️','🎵','⚽','🌊','🎮','🍺','☕'];
+    const ICON_OPTIONS = [
+      {key:'home',label:'Casa'},{key:'cart',label:'Mercado'},{key:'car',label:'Auto'},
+      {key:'bolt',label:'Servicios'},{key:'health',label:'Salud'},{key:'film',label:'Entret.'},
+      {key:'user',label:'Personal'},{key:'shield',label:'Seguros'},{key:'book',label:'Educación'},
+      {key:'tag',label:'Otros'},{key:'receipt',label:'Compras'},{key:'wallet',label:'Finanzas'},
+      {key:'pin',label:'Lugar'},{key:'card',label:'Tarjeta'},{key:'layers',label:'General'},
+      {key:'swap',label:'Cambio'},{key:'income',label:'Ingreso'},{key:'loan',label:'Préstamo'},
+      {key:'sparkles',label:'Especial'},{key:'budget',label:'Presup.'},{key:'expense',label:'Gasto'},
+      {key:'clock',label:'Tiempo'},{key:'info',label:'Info'},{key:'cog',label:'Config'},
+      {key:'phone',label:'Teléfono'},
+    ];
     const [name,setName] = usS(item?.name||'');
-    const [icon,setIcon] = usS(item?.icon||'📋');
+    const [icon,setIcon] = usS(item?.icon||'tag');
     return <div>
-      <div className="field"><label className="field-label">Nombre</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Mercado"/></div>
+      <div className="field"><label className="field-label">Nombre</label>
+        <input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Mercado"/>
+      </div>
       <div className="field"><label className="field-label">Ícono</label>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-          {EMOJIS.map(e=><button key={e} onClick={()=>setIcon(e)}
-            style={{padding:'6px 8px',borderRadius:8,border:icon===e?'2px solid var(--accent)':'2px solid transparent',
-              background:icon===e?'var(--accent-soft)':'var(--surface-2)',cursor:'pointer',fontSize:18}}>{e}</button>)}
+          {ICON_OPTIONS.map(opt=>{
+            const IconCmp = Icon[opt.key];
+            if (!IconCmp) return null;
+            const sel = icon===opt.key;
+            return <button key={opt.key} type="button" onClick={()=>setIcon(opt.key)} title={opt.label}
+              style={{width:48,height:48,borderRadius:'var(--r-2)',
+                border:sel?'2px solid var(--accent)':'2px solid transparent',
+                background:sel?'var(--accent-soft,#EDE9FF)':'var(--surface-2)',
+                cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',
+                justifyContent:'center',gap:3,color:sel?'var(--accent)':'var(--text-2)',transition:'all .12s'}}>
+              <IconCmp size={18}/>
+              <span style={{fontSize:9,lineHeight:1,color:'inherit'}}>{opt.label}</span>
+            </button>;
+          })}
         </div>
-        <div style={{marginTop:8,fontSize:13,color:'var(--text-2)'}}>Seleccionado: {icon} — o escribe uno:</div>
-        <input className="input" style={{marginTop:4}} value={icon} onChange={e=>setIcon(e.target.value)} maxLength={4} placeholder="Emoji o texto"/>
       </div>
       <div className="modal-actions">
         {item&&<button className="btn btn-negative" onClick={()=>delItem('expenseCategories',item.id,item.name).then(ok=>ok&&onClose())}>Eliminar</button>}
@@ -1446,12 +1545,19 @@ function ConfigPage({ data, setData, theme, setTheme }) {
       </div>
       <div className="divider"/>
       <div style={{padding:12,display:'flex',flexWrap:'wrap',gap:8}}>
-        {data.expenseCategories.map(c=>(
-          <button key={c.id} className="chip" style={{fontSize:13,padding:'6px 12px',cursor:'pointer'}}
-            onClick={()=>setModal({type:'category',item:c})}>
-            <span style={{marginRight:6}}>{c.icon}</span>{c.name} <Icon.edit size={11} style={{marginLeft:4,opacity:0.5}}/>
-          </button>
-        ))}
+        {data.expenseCategories.map(c=>{
+          const iconKey = CATEGORY_ICON?.[c.icon];
+          const IconCmp = iconKey ? Icon[iconKey] : null;
+          return (
+            <button key={c.id} className="chip" style={{fontSize:13,padding:'6px 12px',cursor:'pointer',display:'flex',alignItems:'center',gap:6}}
+              onClick={()=>setModal({type:'category',item:c})}>
+              {IconCmp
+                ? <IconCmp size={14}/>
+                : <span style={{fontSize:14}}>{c.icon}</span>}
+              {c.name} <Icon.edit size={11} style={{opacity:0.5}}/>
+            </button>
+          );
+        })}
       </div>
     </Card>}
 
