@@ -385,16 +385,17 @@ function BudgetPage({ data, setData, month, setMonth }) {
               const cat = data.expenseCategories.find(c=>c.id===b.categoryId);
               return <div key={b.id} className="tx-row"
                 draggable={canDrag}
-                onDragStart={canDrag ? e=>handleDragStart(e,{id:b.id,_fromCC:false,groupId:section.id}) : undefined}
+                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{id:b.id,_fromCC:false,groupId:section.id});} : undefined}
                 onDragEnd={canDrag ? handleDragEnd : undefined}
-                style={{opacity:b.executed?0.6:dragItem?.id===b.id?0.4:1, cursor:canDrag?'grab':'default'}}>
-                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
-                <CategoryDot category={cat}/>
+                style={{opacity:b.executed?0.6:dragItem?.id===b.id?0.4:1}}>
+                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                  <CategoryDot category={cat}/>
+                </div>
                 <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({editEntry:b.id,data:b})}>
                   <div className="tx-title truncate">{b.description||cat?.name||'—'}</div>
                   <div className="tx-sub">{b.isFixed===false?'Variable':'Fija'}</div>
                 </button>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <EstadoSelect value={b.accountId}
                     onChange={v=>setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,accountId:v}:x)}))}/>
                   <button className="btn-ico sm"
@@ -403,7 +404,10 @@ function BudgetPage({ data, setData, month, setMonth }) {
                     onClick={e=>{e.stopPropagation();setData(d=>({...d,budget:d.budget.map(x=>x.id===b.id?{...x,executed:!x.executed}:x)}));}}>
                     <Icon.check size={14}/>
                   </button>
-                  <span className="amount-sm"><span className="ccy-tag">{b.currency||'COP'}</span>{fmtNum(b.plannedAmount,b.currency||'COP')}</span>
+                  <button className="btn-ico sm" onClick={e=>{e.stopPropagation();delEntry(b.id);}}>
+                    <Icon.trash size={12}/>
+                  </button>
+                  <span className="amount-sm" style={{flexShrink:0}}><span className="ccy-tag">{b.currency||'COP'}</span>{fmtNum(b.plannedAmount,b.currency||'COP')}</span>
                 </div>
               </div>;
             })}
@@ -411,18 +415,19 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {sCCItems.map(cc => (
               <div key={cc.id} className="tx-row"
                 draggable={canDrag}
-                onDragStart={canDrag ? e=>handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,accountId:cc.accountId,groupId:section.id}) : undefined}
+                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{ccKey:cc.ccKey,_fromCC:true,accountId:cc.accountId,groupId:section.id});} : undefined}
                 onDragEnd={canDrag ? handleDragEnd : undefined}
-                style={{opacity:cc.executed?0.6:dragItem?.ccKey===cc.ccKey?0.4:1, cursor:canDrag?'grab':'default'}}>
-                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
-                <div className="tx-icon" style={{background:cc.cardColor+'22',color:cc.cardColor}}>
-                  <Icon.card size={14}/>
+                style={{opacity:cc.executed?0.6:dragItem?.ccKey===cc.ccKey?0.4:1}}>
+                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                  <div className="tx-icon" style={{background:cc.cardColor+'22',color:cc.cardColor}}>
+                    <Icon.card size={14}/>
+                  </div>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{cc.description}</div>
                   <div className="tx-sub">{cc.cardName} · {cc.label}</div>
                 </div>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <EstadoSelect value={cc.accountId}
                     onChange={v=>{
                       const asgns=(data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==cc.ccKey);
@@ -439,7 +444,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
                     }}>
                     <Icon.check size={14}/>
                   </button>
-                  <span className="amount-sm"><span className="ccy-tag">{cc.currency}</span>{fmtNum(cc.plannedAmount,cc.currency)}</span>
+                  <span className="amount-sm" style={{flexShrink:0}}><span className="ccy-tag">{cc.currency}</span>{fmtNum(cc.plannedAmount,cc.currency)}</span>
                 </div>
               </div>
             ))}
@@ -447,17 +452,18 @@ function BudgetPage({ data, setData, month, setMonth }) {
             {sExpItems.map(exp => (
               <div key={exp.id} className="tx-row"
                 draggable={canDrag}
-                onDragStart={canDrag ? e=>handleDragStart(e,{expId:exp.expId,_fromExp:true,groupId:section.id}) : undefined}
+                onDragStart={canDrag ? e=>{if(!e.target.closest('[data-dh]')){e.preventDefault();return;}handleDragStart(e,{expId:exp.expId,_fromExp:true,groupId:section.id});} : undefined}
                 onDragEnd={canDrag ? handleDragEnd : undefined}
-                style={{opacity:exp.executed?0.6:dragItem?.expId===exp.expId?0.4:1, cursor:canDrag?'grab':'default'}}>
-                {canDrag && <Icon.drag size={14} style={{color:'var(--text-3)',flexShrink:0,marginRight:-4}}/>}
-                <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
+                style={{opacity:exp.executed?0.6:dragItem?.expId===exp.expId?0.4:1}}>
+                <div data-dh style={{cursor:canDrag?'grab':'default',display:'contents'}}>
+                  <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
+                </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{exp.description||exp.catLabel}</div>
                   <div className="tx-sub">Gasto programado</div>
                 </div>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span className="amount-sm"><span className="ccy-tag">{exp.currency}</span>{fmtNum(exp.plannedAmount,exp.currency)}</span>
+                <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                  <span className="amount-sm" style={{flexShrink:0}}><span className="ccy-tag">{exp.currency}</span>{fmtNum(exp.plannedAmount,exp.currency)}</span>
                 </div>
               </div>
             ))}
@@ -1396,39 +1402,24 @@ function ConfigPage({ data, setData, theme, setTheme }) {
   };
 
   const CategoryModalForm = ({item, onClose}) => {
-    const ICON_OPTIONS = [
-      {key:'home',label:'Casa'},{key:'cart',label:'Mercado'},{key:'car',label:'Auto'},
-      {key:'bolt',label:'Servicios'},{key:'health',label:'Salud'},{key:'film',label:'Entret.'},
-      {key:'user',label:'Personal'},{key:'shield',label:'Seguros'},{key:'book',label:'Educación'},
-      {key:'tag',label:'Otros'},{key:'receipt',label:'Compras'},{key:'wallet',label:'Finanzas'},
-      {key:'pin',label:'Lugar'},{key:'card',label:'Tarjeta'},{key:'layers',label:'General'},
-      {key:'swap',label:'Cambio'},{key:'income',label:'Ingreso'},{key:'loan',label:'Préstamo'},
-      {key:'sparkles',label:'Especial'},{key:'budget',label:'Presup.'},{key:'expense',label:'Gasto'},
-      {key:'clock',label:'Tiempo'},{key:'info',label:'Info'},{key:'cog',label:'Config'},
-      {key:'phone',label:'Teléfono'},
-    ];
+    const EMOJIS = ['🏠','🛒','🚗','💡','🏥','🎬','👤','🛡','📚','✈️','🎁','📋','💰','🍽','👶','🐕','💻','📱','🏋️','🎵','⚽','🌊','🎮','🍺','☕'];
     const [name,setName] = usS(item?.name||'');
-    const [icon,setIcon] = usS(item?.icon||'tag');
+    const [icon,setIcon] = usS(item?.icon||'📋');
     return <div>
       <div className="field"><label className="field-label">Nombre</label>
         <input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Mercado"/>
       </div>
       <div className="field"><label className="field-label">Ícono</label>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-          {ICON_OPTIONS.map(opt=>{
-            const IconCmp = Icon[opt.key];
-            if (!IconCmp) return null;
-            const sel = icon===opt.key;
-            return <button key={opt.key} type="button" onClick={()=>setIcon(opt.key)} title={opt.label}
-              style={{width:48,height:48,borderRadius:'var(--r-2)',
-                border:sel?'2px solid var(--accent)':'2px solid transparent',
-                background:sel?'var(--accent-soft,#EDE9FF)':'var(--surface-2)',
-                cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',
-                justifyContent:'center',gap:3,color:sel?'var(--accent)':'var(--text-2)',transition:'all .12s'}}>
-              <IconCmp size={18}/>
-              <span style={{fontSize:9,lineHeight:1,color:'inherit'}}>{opt.label}</span>
-            </button>;
-          })}
+          {EMOJIS.map(e=>(
+            <button key={e} type="button" onClick={()=>setIcon(e)}
+              style={{width:40,height:40,borderRadius:'var(--r-2)',fontSize:20,
+                border:icon===e?'2px solid var(--accent)':'2px solid transparent',
+                background:icon===e?'var(--accent-soft,#EDE9FF)':'var(--surface-2)',
+                cursor:'pointer',display:'grid',placeItems:'center',transition:'all .12s'}}>
+              {e}
+            </button>
+          ))}
         </div>
       </div>
       <div className="modal-actions">
