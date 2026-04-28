@@ -1427,24 +1427,41 @@ function ConfigPage({ data, setData, theme, setTheme }) {
   };
 
   const CategoryModalForm = ({item, onClose}) => {
-    const EMOJIS = ['🏠','🛒','🚗','💡','🏥','🎬','👤','🛡','📚','✈️','🎁','📋','💰','🍽','👶','🐕','💻','📱','🏋️','🎵','⚽','🌊','🎮','🍺','☕'];
+    const ICON_OPTS = [
+      {k:'home',l:'Casa'},{k:'cart',l:'Mercado'},{k:'car',l:'Auto'},{k:'bolt',l:'Servicios'},
+      {k:'health',l:'Salud'},{k:'film',l:'Entret.'},{k:'user',l:'Personal'},{k:'shield',l:'Seguros'},
+      {k:'book',l:'Educación'},{k:'tag',l:'General'},{k:'receipt',l:'Facturas'},{k:'wallet',l:'Finanzas'},
+      {k:'pin',l:'Viajes'},{k:'card',l:'Tarjetas'},{k:'layers',l:'Categoría'},{k:'swap',l:'Cambio'},
+      {k:'income',l:'Ingresos'},{k:'loan',l:'Préstamo'},{k:'sparkles',l:'Especial'},{k:'clock',l:'Tiempo'},
+      {k:'cog',l:'Config'},{k:'gift',l:'Regalos'},{k:'calendar',l:'Fechas'},{k:'star',l:'Favorito'},
+      {k:'trending',l:'Inversión'},{k:'trendingDown',l:'Deudas'},{k:'bell',l:'Alertas'},{k:'flag',l:'Metas'},
+      {k:'sun',l:'Vacaciones'},{k:'moon',l:'Noche'},{k:'pieChart',l:'Estadística'},{k:'bullseye',l:'Objetivo'},
+      {k:'send',l:'Envíos'},{k:'refresh',l:'Recurrente'},{k:'alert',l:'Urgente'},{k:'data',l:'Internet'},
+      {k:'budget',l:'Presupuesto'},{k:'expense',l:'Gastos'},{k:'spark',l:'Destello'},{k:'eye',l:'Revisión'},
+    ];
     const [name,setName] = usS(item?.name||'');
-    const [icon,setIcon] = usS(item?.icon||'📋');
+    const [icon,setIcon] = usS(item?.icon||'tag');
     return <div>
       <div className="field"><label className="field-label">Nombre</label>
         <input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Mercado"/>
       </div>
       <div className="field"><label className="field-label">Ícono</label>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-          {EMOJIS.map(e=>(
-            <button key={e} type="button" onClick={()=>setIcon(e)}
-              style={{width:40,height:40,borderRadius:'var(--r-2)',fontSize:20,
-                border:icon===e?'2px solid var(--accent)':'2px solid transparent',
-                background:icon===e?'var(--accent-soft,#EDE9FF)':'var(--surface-2)',
-                cursor:'pointer',display:'grid',placeItems:'center',transition:'all .12s'}}>
-              {e}
-            </button>
-          ))}
+          {ICON_OPTS.map(({k,l})=>{
+            const IconCmp = Icon[k];
+            if (!IconCmp) return null;
+            const sel = icon===k;
+            return <button key={k} type="button" onClick={()=>setIcon(k)} title={l}
+              style={{width:48,height:48,borderRadius:'var(--r-2)',
+                border:sel?'2px solid var(--accent)':'2px solid var(--line)',
+                background:sel?'color-mix(in srgb,var(--accent) 12%,var(--surface))':'var(--surface-2)',
+                color:sel?'var(--accent)':'var(--text-3)',
+                cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',
+                justifyContent:'center',gap:3,transition:'all .12s'}}>
+              <IconCmp size={17}/>
+              <span style={{fontSize:9,lineHeight:1,color:'inherit'}}>{l}</span>
+            </button>;
+          })}
         </div>
       </div>
       <div className="modal-actions">

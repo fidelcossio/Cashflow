@@ -81,7 +81,11 @@ const CATEGORY_ICON = {
   'film':'film','user':'user','shield':'shield','book':'book','tag':'tag',
   'receipt':'receipt','wallet':'wallet','pin':'pin','card':'card','layers':'layers',
   'swap':'swap','income':'income','loan':'loan','sparkles':'sparkles','budget':'budget',
-  'expense':'expense','clock':'clock','info':'info','cog':'cog','phone':'phone',
+  'expense':'expense','clock':'clock','info':'info','cog':'cog',
+  'gift':'gift','calendar':'calendar','star':'star','trending':'trending',
+  'trendingDown':'trendingDown','bell':'bell','flag':'flag','sun':'sun','moon':'moon',
+  'pieChart':'pieChart','bullseye':'bullseye','send':'send','refresh':'refresh',
+  'alert':'alert','data':'data','spark':'spark','eye':'eye',
 };
 function CategoryDot({ category, size = 40 }) {
   if (!category) return <div className="tx-icon cat-8"><Icon.tag size={18} /></div>;
