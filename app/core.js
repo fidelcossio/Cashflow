@@ -184,6 +184,28 @@ function getCCPaymentForMonth(item, month) {
   return 0;
 }
 
+// ── CC debt calculations ─────────────────────────────────────
+function calcRemainingCapital(item, month) {
+  const m = month || currentMonthKey();
+  const amt = parseFloat(item.totalAmount) || 0;
+  const [ny, nm] = m.split('-').map(Number);
+  if (item.type === 'subscription') {
+    if (!item.endMonth) return null;
+    const [ey, em] = item.endMonth.split('-').map(Number);
+    return Math.max(0, (ey - ny) * 12 + (em - nm) + 1) * amt;
+  }
+  const n = parseInt(item.installments) || 1;
+  const [sy, sm] = (item.startMonth || m).split('-').map(Number);
+  const remaining = Math.max(0, n - Math.max(0, (ny - sy) * 12 + (nm - sm)));
+  return Math.round(amt / Math.max(n, 1)) * remaining;
+}
+
+function calcRemainingInterest(item, month) {
+  const cap = calcRemainingCapital(item, month);
+  if (cap === null) return null;
+  return Math.round(cap * (parseFloat(item.interestRate) || 0) / 100);
+}
+
 // Expose to window
 Object.assign(window, {
   STORAGE_KEY, defaultData, loadData, saveData,
@@ -193,4 +215,5 @@ Object.assign(window, {
   sumByCurrency, addCBags, subtractCBags,
   generateRecurrenceDates, getExpenseMonth, isExpenseOverdue, recurrenceLabel,
   calcStartMonth, getCCPaymentForMonth,
+  calcRemainingCapital, calcRemainingInterest,
 });
