@@ -273,6 +273,7 @@ function CCItemForm({ data, initial, onSave, onClose, onDelete, defaultCardId })
     cardId: src.cardId || defaultCard,
     purchaseDate: initDate,
     description: src.description || '',
+    categoryId: src.categoryId || '10',
     totalAmount: src.totalAmount || '',
     installments: src.installments || 1,
     type: initType,
@@ -347,9 +348,16 @@ function CCItemForm({ data, initial, onSave, onClose, onDelete, defaultCardId })
         </select>
       </F>
     </div>
-    <F label="Descripción">
-      <input className="input" value={f.description} onChange={e => set('description', e.target.value)} placeholder="Ej: Supermercado / Televisor / Netflix" />
-    </F>
+    <div className="field-row field-row-2">
+      <F label="Descripción">
+        <input className="input" value={f.description} onChange={e => set('description', e.target.value)} placeholder="Ej: Supermercado / Televisor / Netflix" />
+      </F>
+      <F label="Categoría">
+        <select className="select" value={f.categoryId} onChange={e => set('categoryId', e.target.value)}>
+          {data.expenseCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </F>
+    </div>
     <div className="field-row field-row-3">
       <F label={f.type === 'subscription' ? 'Monto mensual' : 'Monto total'}>
         <input className="input" type="number" step="0.01" value={f.totalAmount} onChange={e => set('totalAmount', e.target.value)} />

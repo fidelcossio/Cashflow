@@ -193,6 +193,8 @@ function BudgetPage({ data, setData, month, setMonth }) {
     const num = (my-sy)*12+(mm-sm)+1;
     const ccKey = `${i.id}__${month}`;
     const asgn = (data.ccBudgetAssignments || []).find(a => a.ccKey === ccKey);
+    const catId = i.categoryId || '10';
+    const category = data.expenseCategories.find(c => c.id === catId) || null;
     return {
       _fromCC:true, id:`cc_${i.id}_${month}`, ccKey, ccItemId:i.id,
       description:i.description, plannedAmount:pay,
@@ -201,6 +203,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
       label: n>1 ? `Cuota ${num}/${n}` : i.type==='subscription'?'Suscripción':'Diferido',
       type:i.type, purchaseDate:i.purchaseDate||i.startMonth||month,
       installNum:num, installTotal:n,
+      category,
       groupId: asgn?.groupId||null, accountId: asgn?.accountId||null,
       executed: !!asgn?.executed,
     };
@@ -215,6 +218,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
         description:exp.description, plannedAmount:parseFloat(exp.amount)||0,
         catLabel:cat?.name||'—', currency:exp.currency||'COP',
         date:exp.date, recurrence:exp.recurrence||null, recurrenceGroupId:exp.recurrenceGroupId||null,
+        category: cat || null,
         groupId:exp.groupId||null, accountId:exp.accountId||null,
         executed:!!exp.executed,
       };
@@ -441,9 +445,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 onDragEnd={handleDragEnd}
                 style={{opacity:cc.executed?0.6:dragItem?.ccKey===cc.ccKey?0.4:1}}>
                 <div data-dh style={{cursor:'grab',display:'contents'}}>
-                  <div className="tx-icon" style={{background:cc.cardColor+'22',color:cc.cardColor}}>
-                    <Icon.card size={14}/>
-                  </div>
+                  <CategoryDot category={cc.category}/>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{cc.description}</div>
@@ -477,14 +479,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 onDragEnd={handleDragEnd}
                 style={{opacity:exp.executed?0.6:dragItem?.expId===exp.expId?0.4:1}}>
                 <div data-dh style={{cursor:'grab',display:'contents'}}>
-                  <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
+                  <CategoryDot category={exp.category}/>
                 </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{exp.description||exp.catLabel}</div>
-                  <div className="tx-sub" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6}}>
-                    {exp.recurrenceGroupId
-                      ? <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>
-                      : <span/>}
+                  <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
+                    {exp.recurrenceGroupId && <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>}
                     <span>{formatDate(exp.date)}</span>
                   </div>
                 </div>
@@ -765,10 +765,8 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                           {overdue && <span style={{color:'var(--negative)',marginRight:4}}>⚠</span>}
                           {exp.description||cat?.name||'Gasto'}
                         </div>
-                        <div className="tx-sub" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6}}>
-                          {exp.recurrenceGroupId
-                            ? <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>
-                            : <span/>}
+                        <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
+                          {exp.recurrenceGroupId && <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>}
                           <span>{formatDate(exp.date)}</span>
                         </div>
                       </button>
