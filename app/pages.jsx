@@ -252,7 +252,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
       if (!byAcc['__none__']) byAcc['__none__']={entries:[],cc:[],exp:[]};
       return Object.entries(byAcc).map(([key,v]) => {
         const acc = key==='__none__' ? null : data.accounts.find(a=>a.id===key);
-        return { id:key, name:acc?acc.name:'Planificado', goal:null, gKey:key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp };
+        return { id:key, name:acc?acc.name:'Sin cuenta', goal:null, gKey:key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp };
       }).sort((a,b) => a.id==='__none__'?-1:b.id==='__none__'?1:a.name.localeCompare(b.name));
     } else {
       // category view
@@ -629,8 +629,8 @@ function ExpensesPage({ data, setData, month, setMonth }) {
       monthExpenses.forEach(exp => { const k=exp.accountId||'__none__'; if(!byAcc[k])byAcc[k]=[]; byAcc[k].push(exp); });
       return Object.entries(byAcc).map(([k,items]) => {
         const acc = k==='__none__'?null:data.accounts.find(a=>a.id===k);
-        return { key:k, label:acc?acc.name:'Planificado', items };
-      }).sort((a,b)=>a.label==='Planificado'?-1:b.label==='Planificado'?1:a.label.localeCompare(b.label));
+        return { key:k, label:acc?acc.name:'Sin cuenta', items };
+      }).sort((a,b)=>a.label==='Sin cuenta'?-1:b.label==='Sin cuenta'?1:a.label.localeCompare(b.label));
     } else {
       const byCat = {};
       monthExpenses.forEach(exp => { const k=exp.categoryId||'__none__'; if(!byCat[k])byCat[k]=[]; byCat[k].push(exp); });
@@ -1113,30 +1113,60 @@ function LoansPage({ data, setData }) {
   };
 
   // Single loan payment form
-  const PaymentForm = ({loan, onClose}) => {
+  const PaymentForm = ({loan: loanInit, onClose}) => {
+    const loan = usM(()=>data.loansGiven.find(x=>x.id===loanInit.id)||loanInit,[data.loansGiven,loanInit.id]);
+    const isPaid = loan.status === 'paid';
     const [amount, setAmount] = usS('');
     const [date, setDate] = usS(today());
     const [notes, setNotes] = usS('');
     const save = () => {
-      if(!amount)return;
+      if(!amount||isPaid)return;
       const payment={id:uid(),date,amount:parseFloat(amount),currency:loan.currency,notes};
       const payments=[...(loan.payments||[]),payment];
       const totalPaid=payments.reduce((s,p)=>s+p.amount,0);
       const status=totalPaid>=loan.amount?'paid':totalPaid>0?'partial':'pending';
       setData(d=>({...d,loansGiven:d.loansGiven.map(i=>i.id===loan.id?{...i,payments,status}:i)}));
-      toast('Abono registrado'); onClose();
+      toast('Abono registrado'); setAmount(''); setNotes('');
     };
+    const delPayment = async (pid) => {
+      const ok = await confirm({message:'¿Eliminar este abono?',ok:'Eliminar',danger:true});
+      if(!ok)return;
+      const payments=(loan.payments||[]).filter(p=>p.id!==pid);
+      const totalPaid=payments.reduce((s,p)=>s+p.amount,0);
+      const status=totalPaid>=loan.amount?'paid':totalPaid>0?'partial':'pending';
+      setData(d=>({...d,loansGiven:d.loansGiven.map(i=>i.id===loan.id?{...i,payments,status}:i)}));
+      toast('Abono eliminado');
+    };
+    const history = loan.payments||[];
     return <div>
-      <p className="muted" style={{fontSize:13,marginBottom:12}}>Préstamo a {loan.person} por {fmtStr(loan.amount,loan.currency)}</p>
-      <div className="field-row">
-        <div className="field"><label className="field-label">Fecha</label><input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
-        <div className="field"><label className="field-label">Monto ({loan.currency})</label><input className="input" type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
-      </div>
-      <div className="field"><label className="field-label">Nota (opcional)</label><input className="input" value={notes} onChange={e=>setNotes(e.target.value)}/></div>
-      <div className="modal-actions">
-        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" onClick={save} disabled={!amount}>Registrar abono</button>
-      </div>
+      <p className="muted" style={{fontSize:13,marginBottom:12}}>Préstamo a <strong>{loan.person}</strong> por {fmtStr(loan.amount,loan.currency)}</p>
+      {isPaid && <div style={{padding:'8px 12px',background:'var(--positive-soft,#D1FAE5)',borderRadius:8,fontSize:13,color:'var(--positive)',marginBottom:12,fontWeight:500}}>Este préstamo ya está saldado.</div>}
+      <fieldset disabled={isPaid} style={{border:'none',padding:0,margin:0,opacity:isPaid?0.5:1}}>
+        <div className="field-row">
+          <div className="field"><label className="field-label">Fecha</label><input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div className="field"><label className="field-label">Monto ({loan.currency})</label><input className="input" type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
+        </div>
+        <div className="field"><label className="field-label">Nota (opcional)</label><input className="input" value={notes} onChange={e=>setNotes(e.target.value)}/></div>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginBottom:16}}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save} disabled={!amount||isPaid}>Registrar abono</button>
+        </div>
+      </fieldset>
+      {history.length>0 && <>
+        <div style={{borderTop:'1px solid var(--line)',paddingTop:12,marginTop:4}}>
+          <div style={{fontWeight:600,fontSize:13,marginBottom:8}}>Historial de abonos</div>
+          {history.slice().reverse().map(p=>(
+            <div key={p.id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid var(--line)'}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:500}}>{fmtNum(p.amount,p.currency||loan.currency)} <span className="ccy-tag">{p.currency||loan.currency}</span></div>
+                <div style={{fontSize:11,color:'var(--text-3)',marginTop:1}}>{formatDate(p.date)}{p.notes?` · ${p.notes}`:''}</div>
+              </div>
+              <button className="btn-ico sm" title="Eliminar abono" onClick={()=>delPayment(p.id)}><Icon.trash size={12}/></button>
+            </div>
+          ))}
+        </div>
+      </>}
+      {history.length===0 && <div style={{borderTop:'1px solid var(--line)',paddingTop:12,marginTop:4,textAlign:'center',color:'var(--text-3)',fontSize:13}}>Sin abonos registrados</div>}
     </div>;
   };
 
@@ -1296,15 +1326,15 @@ function LoansPage({ data, setData }) {
                       const saldo=l.amount-paid;
                       return <div key={l.id} className="tx-row" style={{opacity:l.status==='paid'?0.55:1}}>
                         <div className="tx-icon cat-5" style={{width:40,height:40,flexShrink:0}}><Icon.loan size={16}/></div>
-                        <div className="grow" style={{minWidth:0}}>
+                        <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({edit:l.id,data:l})}>
                           <div className="tx-title truncate" style={l.status==='paid'?{textDecoration:'line-through'}:{}}>{l.notes||formatDate(l.date)}</div>
                           <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
                             <span className={`chip chip-${statusTone[l.status]||'warn'}`} style={{fontSize:9,padding:'0 4px'}}>{statusLabel[l.status]}</span>
                             <span>{formatDate(l.date)}</span>
                           </div>
-                        </div>
+                        </button>
                         <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                          {l.status!=='paid'&&<button className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={e=>{e.stopPropagation();setPayModal(l);}}>Abonar</button>}
+                          <button className="btn-ico sm" title="Registrar abono" onClick={e=>{e.stopPropagation();setPayModal(l);}}><Icon.income size={14}/></button>
                           <button className="btn-ico sm" onClick={()=>delGiven(l.id)}><Icon.trash size={12}/></button>
                           <span className="amount-sm" style={{flexShrink:0,color:saldo>0?'var(--negative)':'var(--positive)'}}><span className="ccy-tag">{l.currency}</span>{fmtNum(saldo,l.currency)}</span>
                         </div>
