@@ -1174,14 +1174,23 @@ function LoansPage({ data, setData }) {
       <p className="muted" style={{fontSize:13,marginBottom:12}}>Préstamo a <strong>{loan.person}</strong> por {fmtStr(loan.amount,loan.currency)}</p>
       {isPaid && <div style={{padding:'8px 12px',background:'var(--positive-soft,#D1FAE5)',borderRadius:8,fontSize:13,color:'var(--positive)',marginBottom:12,fontWeight:500}}>Este préstamo ya está saldado.</div>}
       <fieldset disabled={isPaid} style={{border:'none',padding:0,margin:0,opacity:isPaid?0.5:1}}>
-        <div className="field-row">
-          <div className="field"><label className="field-label">Fecha</label><input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
-          <div className="field"><label className="field-label">Monto ({loan.currency})</label><input className="input" type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
+        <div style={{display:'flex',gap:10,marginBottom:12}}>
+          <div className="field" style={{flex:'0 0 auto',width:140}}>
+            <label className="field-label">Fecha</label>
+            <input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+          </div>
+          <div className="field" style={{flex:1,minWidth:0}}>
+            <label className="field-label">Monto ({loan.currency})</label>
+            <input className="input" type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0"/>
+          </div>
         </div>
-        <div className="field"><label className="field-label">Nota (opcional)</label><input className="input" value={notes} onChange={e=>setNotes(e.target.value)}/></div>
-        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginBottom:16}}>
-          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save} disabled={!amount||isPaid}>Registrar abono</button>
+        <div style={{display:'flex',gap:10,alignItems:'flex-end',marginBottom:16}}>
+          <div className="field" style={{flex:1,minWidth:0,marginBottom:0}}>
+            <label className="field-label">Nota (opcional)</label>
+            <input className="input" value={notes} onChange={e=>setNotes(e.target.value)}/>
+          </div>
+          <button className="btn btn-ghost" style={{flexShrink:0}} onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" style={{flexShrink:0}} onClick={save} disabled={!amount||isPaid}>Registrar</button>
         </div>
       </fieldset>
       {history.length>0 && <>
@@ -1308,7 +1317,6 @@ function LoansPage({ data, setData }) {
     </span>);
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Préstamos y deudas" subtitle="Dinero que prestaste o que debes"
       right={<button className="btn btn-primary" onClick={()=>setModal('new')}><Icon.plus size={16}/> Nuevo</button>}/>
 
@@ -1426,6 +1434,7 @@ function LoansPage({ data, setData }) {
     <Modal open={!!personPayModal} onClose={()=>setPersonPayModal(null)} title="Abonar por persona" size="lg">
       {personPayModal&&<PersonPayForm person={personPayModal.person} loans={personPayModal.loans} onClose={()=>setPersonPayModal(null)}/>}
     </Modal>
+    {confirmNode}
   </div>;
 }
 
