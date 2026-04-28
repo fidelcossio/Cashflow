@@ -176,6 +176,9 @@ function BudgetPage({ data, setData, month, setMonth }) {
     setDragItem(null); setDragOverGroup(null);
   };
 
+  const ccTypeLabel = (t) => ({single:'Diferido',installment:'Cuotas',subscription:'Suscripción'})[t]||t;
+  const ccTypeChip  = (t) => t==='installment'?'chip-warn':t==='subscription'?'chip-accent':'';
+
   const groups = data.budgetGroups || [];
   const monthEntries = usM(() => data.budget.filter(i => i.month === month), [data.budget, month]);
 
@@ -196,6 +199,8 @@ function BudgetPage({ data, setData, month, setMonth }) {
       cardName:card?.name||'TC', cardColor:card?.color||'#6366f1',
       currency:card?.currency||'COP',
       label: n>1 ? `Cuota ${num}/${n}` : i.type==='subscription'?'Suscripción':'Diferido',
+      type:i.type, purchaseDate:i.purchaseDate||i.startMonth||month,
+      installNum:num, installTotal:n,
       groupId: asgn?.groupId||null, accountId: asgn?.accountId||null,
       executed: !!asgn?.executed,
     };
@@ -209,6 +214,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
         _fromExp:true, id:`exp_${exp.id}`, expId:exp.id,
         description:exp.description, plannedAmount:parseFloat(exp.amount)||0,
         catLabel:cat?.name||'—', currency:exp.currency||'COP',
+        date:exp.date, recurrence:exp.recurrence||null, recurrenceGroupId:exp.recurrenceGroupId||null,
         groupId:exp.groupId||null, accountId:exp.accountId||null,
         executed:!!exp.executed,
       };
@@ -441,7 +447,11 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{cc.description}</div>
-                  <div className="tx-sub">{cc.cardName} · {cc.label}</div>
+                  <div className="tx-sub">
+                    <span className={`chip ${ccTypeChip(cc.type)}`} style={{fontSize:9,padding:'0 4px',marginRight:4}}>{ccTypeLabel(cc.type)}</span>
+                    {cc.type==='installment'&&`${cc.installNum}/${cc.installTotal} · `}
+                    {formatDate(cc.purchaseDate)}
+                  </div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <button className="btn-ico sm"
@@ -471,7 +481,12 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 </div>
                 <div className="grow" style={{minWidth:0}}>
                   <div className="tx-title truncate">{exp.description||exp.catLabel}</div>
-                  <div className="tx-sub">Gasto programado</div>
+                  <div className="tx-sub" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6}}>
+                    {exp.recurrenceGroupId
+                      ? <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>
+                      : <span/>}
+                    <span>{formatDate(exp.date)}</span>
+                  </div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <button className="btn-ico sm"
@@ -750,9 +765,11 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                           {overdue && <span style={{color:'var(--negative)',marginRight:4}}>⚠</span>}
                           {exp.description||cat?.name||'Gasto'}
                         </div>
-                        <div className="tx-sub">
-                          {formatDate(exp.date)}
-                          {exp.recurrenceGroupId && <span className="chip" style={{fontSize:9,padding:'0 4px',marginLeft:4}}>{recurrenceLabel(exp.recurrence)}</span>}
+                        <div className="tx-sub" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6}}>
+                          {exp.recurrenceGroupId
+                            ? <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>
+                            : <span/>}
+                          <span>{formatDate(exp.date)}</span>
                         </div>
                       </button>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
