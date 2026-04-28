@@ -1448,17 +1448,66 @@ function ConfigPage({ data, setData, theme, setTheme }) {
   const [modal, setModal] = usS(null);
 
   // ── Data export/import ──────────────────────────────────
+  const [importPreview, setImportPreview] = usS(null); // {parsed, summary, file}
+
   const exportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const payload = {
+      _version: 3,
+      _exportedAt: new Date().toISOString(),
+      _app: 'Cashflow Personal',
+      ...data,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download=`finanzas-backup-${today()}.json`; a.click();
     URL.revokeObjectURL(url);
+    toast('Backup descargado');
   };
-  const importData = (file) => {
+
+  const buildSummary = (d) => [
+    { label:'Cuentas',         val: (d.accounts||[]).length },
+    { label:'Categorías',      val: (d.expenseCategories||[]).length },
+    { label:'Fuentes ingreso', val: (d.incomeSources||[]).length },
+    { label:'Tasas de cambio', val: (d.exchangeRates||[]).length },
+    { label:'Ingresos',        val: (d.income||[]).length },
+    { label:'Presupuesto',     val: (d.budget||[]).length },
+    { label:'Gastos',          val: (d.expenses||[]).length },
+    { label:'Tarjetas',        val: (d.creditCards||[]).length },
+    { label:'Cargos tarjeta',  val: (d.creditCard||[]).length },
+    { label:'Asignaciones CC', val: (d.ccBudgetAssignments||[]).length },
+    { label:'Grupos presup.',  val: (d.budgetGroups||[]).length },
+    { label:'Préstamos dados', val: (d.loansGiven||[]).length },
+    { label:'Deudas',          val: (d.debts||[]).length },
+  ].filter(x=>x.val>0);
+
+  const handleImportFile = (file) => {
+    if (!file) return;
     const r = new FileReader();
-    r.onload = () => { try { const d=JSON.parse(r.result); setData({...defaultData,...d}); toast('Datos importados'); } catch(e){ alert('JSON inválido'); } };
+    r.onload = () => {
+      try {
+        const parsed = JSON.parse(r.result);
+        // Strip metadata keys before importing
+        const { _version, _exportedAt, _app, ...dataFields } = parsed;
+        const summary = buildSummary(dataFields);
+        if (summary.length === 0 && Object.keys(dataFields).length === 0) {
+          toast('⚠ Archivo vacío o sin datos reconocibles');
+          return;
+        }
+        setImportPreview({ parsed: dataFields, summary, exportedAt: _exportedAt||null });
+      } catch(e) {
+        toast('Error: el archivo no es un JSON válido');
+      }
+    };
     r.readAsText(file);
   };
+
+  const confirmImport = () => {
+    if (!importPreview) return;
+    setData({...defaultData, ...importPreview.parsed});
+    toast('Datos importados correctamente');
+    setImportPreview(null);
+  };
+
   const reset = async () => {
     const ok = await confirm({message:'¿Borrar todos los datos? Esta acción no se puede deshacer.',ok:'Borrar todo',danger:true});
     if(!ok)return;
@@ -1732,30 +1781,57 @@ function ConfigPage({ data, setData, theme, setTheme }) {
     </Card>}
 
     {/* DATA */}
-    {section==='data'&&<Card pad="md">
-      <div className="col-4">
-        <div>
-          <h3 className="h3">Exportar</h3>
-          <p className="muted" style={{fontSize:13,marginTop:4}}>Descarga una copia de todos tus datos en JSON.</p>
-          <button className="btn btn-outline" style={{marginTop:12}} onClick={exportData}><Icon.download size={14}/> Exportar JSON</button>
+    {section==='data'&&<div className="col-4">
+      {/* Export */}
+      <Card pad="md">
+        <h3 className="h3" style={{marginBottom:4}}>Exportar datos</h3>
+        <p className="muted" style={{fontSize:13,marginBottom:12}}>Descarga un backup completo de todos tus datos en formato JSON. Incluye cuentas, categorías, fuentes, tasas, ingresos, presupuesto, gastos, tarjetas, préstamos y configuraciones.</p>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
+          {buildSummary(data).map(s=>(
+            <span key={s.label} className="chip" style={{fontSize:11}}>{s.label}: <strong>{s.val}</strong></span>
+          ))}
         </div>
-        <div className="divider"/>
-        <div>
-          <h3 className="h3">Importar</h3>
-          <p className="muted" style={{fontSize:13,marginTop:4}}>Reemplaza todos tus datos con los de un archivo JSON.</p>
-          <label className="btn btn-outline" style={{marginTop:12,display:'inline-flex',cursor:'pointer'}}>
-            <Icon.upload size={14}/> Seleccionar archivo
-            <input type="file" accept="application/json" style={{display:'none'}} onChange={e=>e.target.files[0]&&importData(e.target.files[0])}/>
-          </label>
+        <button className="btn btn-outline" onClick={exportData}><Icon.download size={14}/> Descargar backup</button>
+      </Card>
+
+      {/* Import */}
+      <Card pad="md">
+        <h3 className="h3" style={{marginBottom:4}}>Importar datos</h3>
+        <p className="muted" style={{fontSize:13,marginBottom:12}}>Selecciona un archivo JSON exportado previamente. Podrás revisar el contenido antes de confirmar la importación.</p>
+        <label className="btn btn-outline" style={{display:'inline-flex',cursor:'pointer'}}>
+          <Icon.upload size={14}/> Seleccionar archivo JSON
+          <input type="file" accept="application/json,.json" style={{display:'none'}}
+            onChange={e=>{ handleImportFile(e.target.files[0]); e.target.value=''; }}/>
+        </label>
+      </Card>
+
+      {/* Danger zone */}
+      <Card pad="md">
+        <h3 className="h3" style={{color:'var(--negative)',marginBottom:4}}>Zona peligrosa</h3>
+        <p className="muted" style={{fontSize:13,marginBottom:12}}>Borra todos los datos locales permanentemente. Esta acción no se puede deshacer.</p>
+        <button className="btn btn-negative" onClick={reset}><Icon.trash size={14}/> Borrar todos los datos</button>
+      </Card>
+    </div>}
+
+    {/* Import preview modal */}
+    <Modal open={!!importPreview} onClose={()=>setImportPreview(null)} title="Confirmar importación" size="sm">
+      {importPreview&&<div>
+        {importPreview.exportedAt&&<p className="muted" style={{fontSize:12,marginBottom:12}}>Exportado el {new Date(importPreview.exportedAt).toLocaleString('es-CO')}</p>}
+        <p style={{fontSize:13,marginBottom:10}}>El archivo contiene los siguientes datos:</p>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:16}}>
+          {importPreview.summary.map(s=>(
+            <span key={s.label} className="chip" style={{fontSize:11}}>{s.label}: <strong>{s.val}</strong></span>
+          ))}
         </div>
-        <div className="divider"/>
-        <div>
-          <h3 className="h3" style={{color:'var(--negative)'}}>Zona peligrosa</h3>
-          <p className="muted" style={{fontSize:13,marginTop:4}}>Borrar todos los datos locales permanentemente.</p>
-          <button className="btn btn-negative" style={{marginTop:12}} onClick={reset}><Icon.trash size={14}/> Borrar todo</button>
+        <div style={{padding:'10px 12px',background:'var(--warning-soft,#FCE8C9)',borderRadius:8,fontSize:13,color:'var(--warning-color,#B8721A)',marginBottom:16}}>
+          ⚠ Esta acción reemplazará <strong>todos tus datos actuales</strong>. Exporta primero si quieres conservar los datos existentes.
         </div>
-      </div>
-    </Card>}
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={()=>setImportPreview(null)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={confirmImport}>Importar y reemplazar</button>
+        </div>
+      </div>}
+    </Modal>
 
     {/* Modal */}
     <Modal open={!!modal} onClose={()=>setModal(null)} title={getModalTitle()}>
