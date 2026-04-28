@@ -946,16 +946,15 @@ function CreditPage({ data, setData, month, setMonth }) {
               {isOp && <>
                 <div className="divider"/>
                 <div style={{padding:8}}>
-                  {cardItems.length===0
-                    ? <div className="muted-2" style={{textAlign:'center',fontSize:13,padding:12}}>Sin cargos en esta tarjeta</div>
-                    : cardItems.sort((a,b)=>b.purchaseDate.localeCompare(a.purchaseDate)).map(i=>{
+                  {cardItems.filter(i=>getCCPaymentForMonth(i,month)>0).length===0
+                    ? <div className="muted-2" style={{textAlign:'center',fontSize:13,padding:12}}>Sin pagos este mes</div>
+                    : cardItems.filter(i=>getCCPaymentForMonth(i,month)>0).sort((a,b)=>b.purchaseDate.localeCompare(a.purchaseDate)).map(i=>{
                         const pay = getCCPaymentForMonth(i,month);
                         const n = parseInt(i.installments)||1;
                         const [sy,sm] = (i.startMonth||month).split('-').map(Number);
                         const [my,mm] = month.split('-').map(Number);
                         const installNum = Math.min(Math.max((my-sy)*12+(mm-sm)+1,1),n);
-                        const isActive = pay>0;
-                        return <div key={i.id} className="tx-row" style={{opacity:i.type==='subscription'&&!isActive?0.5:1}}>
+                        return <div key={i.id} className="tx-row">
                           <div className="tx-icon cat-2"><Icon.receipt size={14}/></div>
                           <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setModal({editItem:i.id,data:i})}>
                             <div className="tx-title truncate">{i.description}</div>
@@ -1296,19 +1295,18 @@ function LoansPage({ data, setData }) {
                       const paid=(l.payments||[]).reduce((s,p)=>s+p.amount,0);
                       const saldo=l.amount-paid;
                       return <div key={l.id} className="tx-row" style={{opacity:l.status==='paid'?0.55:1}}>
+                        <div className="tx-icon cat-5" style={{width:40,height:40,flexShrink:0}}><Icon.loan size={16}/></div>
                         <div className="grow" style={{minWidth:0}}>
-                          <div className="tx-title">{formatDateLong(l.date)} · {fmtStr(l.amount,l.currency)}</div>
-                          <div className="tx-sub">{l.notes||'—'}</div>
-                        </div>
-                        <div style={{display:'flex',alignItems:'center',gap:8}}>
-                          <div style={{textAlign:'right',fontSize:12}}>
-                            <div><PaidCell loan={l}/><span className="muted-2" style={{marginLeft:4}}>abonado</span></div>
-                            <div style={{color:saldo>0?'var(--negative)':'var(--positive)',fontWeight:600}}>{fmtNum(saldo,l.currency)} saldo</div>
+                          <div className="tx-title truncate" style={l.status==='paid'?{textDecoration:'line-through'}:{}}>{l.notes||formatDate(l.date)}</div>
+                          <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
+                            <span className={`chip chip-${statusTone[l.status]||'warn'}`} style={{fontSize:9,padding:'0 4px'}}>{statusLabel[l.status]}</span>
+                            <span>{formatDate(l.date)}</span>
                           </div>
-                          <span className={`chip chip-${statusTone[l.status]||'warn'}`} style={{fontSize:11}}>{statusLabel[l.status]}</span>
-                          {l.status!=='paid'&&<button className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={()=>setPayModal(l)}>Abonar</button>}
-                          <button className="btn-ico sm" onClick={()=>setModal({edit:l.id,data:l})}><Icon.edit size={12}/></button>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                          {l.status!=='paid'&&<button className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={e=>{e.stopPropagation();setPayModal(l);}}>Abonar</button>}
                           <button className="btn-ico sm" onClick={()=>delGiven(l.id)}><Icon.trash size={12}/></button>
+                          <span className="amount-sm" style={{flexShrink:0,color:saldo>0?'var(--negative)':'var(--positive)'}}><span className="ccy-tag">{l.currency}</span>{fmtNum(saldo,l.currency)}</span>
                         </div>
                       </div>;
                     })}

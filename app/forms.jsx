@@ -218,21 +218,12 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
         </select>
       </F>
     </div>
-    <div className="field-row field-row-2">
-      <F label="Cuenta">
-        <select className="select" value={f.accountId || ''} onChange={e => set('accountId', e.target.value || null)}>
-          <option value="">Sin asignar (Planificado)</option>
-          {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
-        </select>
-      </F>
-      <F label="Estado">
-        <select className="select" value={f.status} onChange={e => set('status', e.target.value)}>
-          <option value="planned">Planeado</option>
-          <option value="assigned">Asignado</option>
-          <option value="executed">Ejecutado</option>
-        </select>
-      </F>
-    </div>
+    <F label="Cuenta">
+      <select className="select" value={f.accountId || ''} onChange={e => set('accountId', e.target.value || null)}>
+        <option value="">Sin asignar</option>
+        {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
+      </select>
+    </F>
     {groups.length > 0 && (
       <F label="Grupo de presupuesto">
         <select className="select" value={f.groupId || ''} onChange={e => set('groupId', e.target.value || null)}>
