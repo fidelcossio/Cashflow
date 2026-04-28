@@ -377,16 +377,16 @@ function BudgetPage({ data, setData, month, setMonth }) {
       );
       const totalCount = sEntries.length+sCCItems.length+sExpItems.length;
       const execCount = sEntries.filter(i=>i.executed).length+sCCItems.filter(i=>i.executed).length+sExpItems.filter(i=>i.executed).length;
-      const sExecBag = groupBy==='account' ? addCBags(
+      const sExecBag = addCBags(
         sumByCurrency(sEntries.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency||'COP'),
         sumByCurrency(sCCItems.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency),
         sumByCurrency(sExpItems.filter(i=>i.executed), i=>i.plannedAmount, i=>i.currency)
-      ) : null;
-      const sPendBag = groupBy==='account' ? addCBags(
+      );
+      const sPendBag = addCBags(
         sumByCurrency(sEntries.filter(i=>!i.executed), i=>i.plannedAmount, i=>i.currency||'COP'),
         sumByCurrency(sCCItems.filter(i=>!i.executed), i=>i.plannedAmount, i=>i.currency),
         sumByCurrency(sExpItems.filter(i=>!i.executed), i=>i.plannedAmount, i=>i.currency)
-      ) : null;
+      );
       const rawPct = section.goal>0 ? ((sTotalBag['COP']||0)/section.goal*100) : null;
       const pct = rawPct!==null ? Math.min(rawPct,100) : null;
       const barTone = rawPct===null?'default':rawPct>140?'negative':rawPct>110?'warning':rawPct>=99?'positive':'default';
@@ -426,6 +426,16 @@ function BudgetPage({ data, setData, month, setMonth }) {
         {/* Items */}
         {isOpen && <>
           <div className="divider"/>
+          {totalCount>0 && <div style={{padding:'8px 14px',display:'flex',gap:16,justifyContent:'flex-end',flexWrap:'wrap',borderBottom:'1px solid var(--line)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+              <span style={{color:'var(--text-3)'}}>Sin ejecutar:</span>
+              <span style={{fontWeight:600}}><FmtBag bag={sPendBag}/></span>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+              <span style={{color:'var(--text-3)'}}>Ejecutado:</span>
+              <span style={{fontWeight:600,color:'var(--positive)'}}><FmtBag bag={sExecBag}/></span>
+            </div>
+          </div>}
           <div style={{padding:8}}>
             {/* Budget entries */}
             {sEntries.map(b => {
@@ -522,16 +532,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
             ))}
             {totalCount===0 && <div className="muted-2" style={{textAlign:'center',fontSize:13,padding:'8px 0'}}>Sin entradas · <button className="btn btn-ghost btn-sm" style={{fontSize:12}} onClick={()=>setModal('new-entry')}>+ Agregar</button></div>}
           </div>
-          {groupBy==='account' && totalCount>0 && <div style={{borderTop:'1px solid var(--line)',padding:'8px 14px',display:'flex',gap:16,justifyContent:'flex-end',flexWrap:'wrap'}}>
-            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
-              <span style={{color:'var(--text-3)'}}>Sin ejecutar:</span>
-              <span style={{fontWeight:600}}><FmtBag bag={sPendBag}/></span>
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
-              <span style={{color:'var(--text-3)'}}>Ejecutado:</span>
-              <span style={{fontWeight:600,color:'var(--positive)'}}><FmtBag bag={sExecBag}/></span>
-            </div>
-          </div>}
           {groupBy==='group' && section.id && <div className="card-pad" style={{paddingTop:0}}>
             <button className="btn btn-ghost btn-sm" style={{fontSize:12}} onClick={()=>setModal('new-entry')}>
               <Icon.plus size={12}/> Agregar a este grupo
@@ -768,8 +768,8 @@ function ExpensesPage({ data, setData, month, setMonth }) {
           {grouped.map(section => {
             const open = isOpen(section.key);
             const sTotalBag = sumByCurrency(section.items, e=>parseFloat(e.amount)||0, e=>e.currency);
-            const sExecBag = groupBy==='account' ? sumByCurrency(section.items.filter(e=>e.executed), e=>parseFloat(e.amount)||0, e=>e.currency) : null;
-            const sPendBag = groupBy==='account' ? sumByCurrency(section.items.filter(e=>!e.executed), e=>parseFloat(e.amount)||0, e=>e.currency) : null;
+            const sExecBag = sumByCurrency(section.items.filter(e=>e.executed), e=>parseFloat(e.amount)||0, e=>e.currency);
+            const sPendBag = sumByCurrency(section.items.filter(e=>!e.executed), e=>parseFloat(e.amount)||0, e=>e.currency);
             const isDragTarget = canDrag && dragOverGroup === section.key && dragItem?.sectionKey !== section.key;
             return <Card key={section.key} pad="none"
               style={{outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s'}}
@@ -787,6 +787,16 @@ function ExpensesPage({ data, setData, month, setMonth }) {
               </button>
               {open && <>
                 <div className="divider"/>
+                {section.items.length>0 && <div style={{padding:'8px 14px',display:'flex',gap:16,justifyContent:'flex-end',flexWrap:'wrap',borderBottom:'1px solid var(--line)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                    <span style={{color:'var(--text-3)'}}>Sin ejecutar:</span>
+                    <span style={{fontWeight:600}}><FmtBag bag={sPendBag}/></span>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                    <span style={{color:'var(--text-3)'}}>Ejecutado:</span>
+                    <span style={{fontWeight:600,color:'var(--positive)'}}><FmtBag bag={sExecBag}/></span>
+                  </div>
+                </div>}
                 <div style={{padding:8}}>
                   {section.items.map(exp => {
                     const cat = data.expenseCategories.find(c=>c.id===exp.categoryId);
@@ -825,16 +835,6 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                     </div>;
                   })}
                 </div>
-                {groupBy==='account' && section.items.length>0 && <div style={{borderTop:'1px solid var(--line)',padding:'8px 14px',display:'flex',gap:16,justifyContent:'flex-end',flexWrap:'wrap'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
-                    <span style={{color:'var(--text-3)'}}>Sin ejecutar:</span>
-                    <span style={{fontWeight:600}}><FmtBag bag={sPendBag}/></span>
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
-                    <span style={{color:'var(--text-3)'}}>Ejecutado:</span>
-                    <span style={{fontWeight:600,color:'var(--positive)'}}><FmtBag bag={sExecBag}/></span>
-                  </div>
-                </div>}
               </>}
             </Card>;
           })}
