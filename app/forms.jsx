@@ -156,11 +156,33 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
   const groups = data.budgetGroups || [];
 
-  const previewCount = (!isEdit && f.type === 'recurrente' && f.date)
-    ? generateRecurrenceDates(f.date, f.endDate || null, f.recurrence).length : 0;
+  // Calculate default endDate based on recurrence + startDate
+  const calcDefaultEnd = (startDate, recurrence) => {
+    if (!startDate) return '';
+    const d = new Date(startDate + 'T12:00:00');
+    if (recurrence === 'yearly')       d.setFullYear(d.getFullYear() + 5);
+    else if (recurrence === 'monthly') d.setMonth(d.getMonth() + 12);
+    else if (recurrence === 'weekly')  d.setMonth(d.getMonth() + 12);
+    return d.toISOString().slice(0, 10);
+  };
+
+  // Auto-update endDate when type/recurrence/startDate changes
+  const setWithDefault = (k, v) => setF(p => {
+    const next = { ...p, [k]: v };
+    if ((k === 'type' && v === 'recurrente') || k === 'recurrence' || k === 'date') {
+      if (next.type === 'recurrente') {
+        next.endDate = calcDefaultEnd(next.date, next.recurrence);
+      }
+    }
+    return next;
+  });
+
+  const previewCount = (!isEdit && f.type === 'recurrente' && f.date && f.endDate)
+    ? generateRecurrenceDates(f.date, f.endDate, f.recurrence).length : 0;
 
   const save = () => {
     if (!f.amount || !f.date) return;
+    if (!isEdit && f.type === 'recurrente' && !f.endDate) return;
     onSave({ ...f, amount: parseFloat(f.amount), groupId: f.groupId || null, accountId: f.accountId || null });
   };
 
@@ -168,36 +190,56 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     {!isEdit && (
       <div className="field-row field-row-2">
         <F label="Tipo">
-          <select className="select" value={f.type} onChange={e => set('type', e.target.value)}>
+          <select className="select" value={f.type} onChange={e => setWithDefault('type', e.target.value)}>
             <option value="puntual">Puntual (fecha única)</option>
             <option value="recurrente">Recurrente</option>
           </select>
         </F>
         <F label={f.type === 'puntual' ? 'Fecha' : 'Fecha de inicio'}>
-          <input className="input" type="date" value={f.date} onChange={e => set('date', e.target.value)} />
+          <input className="input" type="date" value={f.date} onChange={e => setWithDefault('date', e.target.value)} />
         </F>
       </div>
     )}
     {isEdit && (
       <F label="Fecha"><input className="input" type="date" value={f.date} onChange={e => set('date', e.target.value)} /></F>
     )}
+    {/* Recurrence controls — new creation */}
     {!isEdit && f.type === 'recurrente' && (
       <div className="field-row field-row-2">
         <F label="Recurrencia">
-          <select className="select" value={f.recurrence} onChange={e => set('recurrence', e.target.value)}>
+          <select className="select" value={f.recurrence} onChange={e => setWithDefault('recurrence', e.target.value)}>
             <option value="weekly">Semanal</option>
             <option value="monthly">Mensual</option>
             <option value="yearly">Anual</option>
           </select>
         </F>
-        <F label="Fecha de fin (opcional)">
-          <input className="input" type="date" value={f.endDate || ''} onChange={e => set('endDate', e.target.value)} />
+        <F label="Fecha de fin *">
+          <input className="input" type="date" value={f.endDate || ''} onChange={e => set('endDate', e.target.value)}
+            style={!f.endDate ? {borderColor:'var(--negative)',boxShadow:'0 0 0 1px var(--negative)'} : {}}/>
         </F>
       </div>
     )}
     {!isEdit && f.type === 'recurrente' && previewCount > 0 && (
       <div style={{ padding: '6px 10px', background: 'var(--positive-soft)', borderRadius: 6, fontSize: 12, color: 'var(--positive)', marginBottom: 2 }}>
         Se crearán <strong>{previewCount} gastos independientes</strong> ({recurrenceLabel(f.recurrence).toLowerCase()})
+      </div>
+    )}
+    {/* Recurrence controls — editing a series */}
+    {isEdit && initial.recurrenceGroupId && (editScope === 'thisAndFuture' || editScope === 'all') && (
+      <div className="field-row field-row-2">
+        <F label="Recurrencia de la serie">
+          <select className="select" value={f.recurrence} onChange={e => set('recurrence', e.target.value)}>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensual</option>
+            <option value="yearly">Anual</option>
+          </select>
+        </F>
+        <F label="Convertir a">
+          <select className="select" value={f.type} onChange={e => set('type', e.target.value)}>
+            <option value="recurrente">Recurrente (mantener serie)</option>
+            <option value="puntual">Puntual (eliminar futuros)</option>
+          </select>
+        </F>
       </div>
     )}
     <div className="field-row field-row-2">
@@ -246,7 +288,10 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
       {onDelete && <button className="btn btn-ghost" style={{ color: 'var(--negative)' }} onClick={onDelete}><Icon.trash size={16} /> Eliminar</button>}
       <div style={{ flex: 1 }} />
       <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-      <button className="btn btn-primary" onClick={save}>Guardar</button>
+      <button className="btn btn-primary" onClick={save}
+        disabled={!f.amount || !f.date || (!isEdit && f.type === 'recurrente' && !f.endDate)}>
+        Guardar
+      </button>
     </div>
   </>;
 }

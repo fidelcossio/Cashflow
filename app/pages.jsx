@@ -675,7 +675,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
 
   // Save
   const save = (v) => {
-    if (modal==='new' && v.isRecurring) {
+    if (modal==='new' && v.type === 'recurrente') {
       const dates = generateRecurrenceDates(v.date, v.endDate||null, v.recurrence);
       const gid = uid();
       const items = dates.map(d => ({
@@ -684,18 +684,52 @@ function ExpensesPage({ data, setData, month, setMonth }) {
       setData(d => ({...d, expenses:[...d.expenses, ...items]}));
       toast(`${items.length} gasto(s) programados`);
     } else if (modal && modal.edit && modal.editScope && modal.editScope !== 'single' && modal.data?.recurrenceGroupId) {
-      // Scoped edit: apply to siblings based on scope
+      // Scoped edit on a recurring series
       const gid = modal.data.recurrenceGroupId;
-      const siblings = data.expenses.filter(e => e.recurrenceGroupId === gid);
-      const base = {...v, month:(v.date||'').slice(0,7), executed:v.status==='executed'};
-      let targets;
-      if (modal.editScope === 'thisAndFuture') {
-        targets = new Set(siblings.filter(e => e.date >= modal.data.date).map(e => e.id));
-      } else { // 'all'
-        targets = new Set(siblings.map(e => e.id));
+      const allSiblings = data.expenses.filter(e => e.recurrenceGroupId === gid).sort((a,b)=>a.date.localeCompare(b.date));
+      const originalDate = modal.data.date;
+      const newDate = v.date || originalDate;
+      const daysDelta = Math.round((new Date(newDate+'T12:00:00') - new Date(originalDate+'T12:00:00')) / 86400000);
+
+      const targets = modal.editScope === 'thisAndFuture'
+        ? allSiblings.filter(e => e.date >= originalDate)
+        : allSiblings;
+
+      const convertToPuntual = v.type === 'puntual';
+      const recurrenceChanged = !convertToPuntual && v.recurrence && v.recurrence !== modal.data.recurrence;
+
+      if (convertToPuntual) {
+        // Keep current item as puntual, delete all other targets
+        const currentId = modal.edit;
+        const toDelete = new Set(targets.filter(e=>e.id!==currentId).map(e=>e.id));
+        const base = {...v, date:newDate, month:newDate.slice(0,7), executed:modal.data.executed||false, recurrenceGroupId:null, type:'puntual'};
+        setData(d => ({...d, expenses:d.expenses.filter(x=>!toDelete.has(x.id)).map(x=>x.id===currentId?{...x,...base}:x)}));
+        toast(`Gasto convertido a puntual · ${toDelete.size} futuro(s) eliminado(s)`);
+      } else if (recurrenceChanged) {
+        // Recurrence pattern changed: regenerate dates for targets from newDate onward
+        const newDates = generateRecurrenceDates(newDate, null, v.recurrence).slice(0, targets.length);
+        const {date:_d, month:_m, ...restV} = v;
+        const targetIds = targets.map(e=>e.id);
+        setData(d => ({...d, expenses:d.expenses.map(x=>{
+          const idx = targetIds.indexOf(x.id);
+          if (idx < 0) return x;
+          const sibDate = newDates[idx] || x.date;
+          return {...x, ...restV, date:sibDate, month:sibDate.slice(0,7), recurrenceGroupId:gid, executed:x.executed};
+        })}));
+        toast(`${targets.length} gasto(s) actualizado(s) con nueva recurrencia`);
+      } else {
+        // Same recurrence, shift all target dates by the same delta
+        const targetIds = new Set(targets.map(e=>e.id));
+        const {date:_d, month:_m, ...restV} = v;
+        setData(s => ({...s, expenses:s.expenses.map(x=>{
+          if (!targetIds.has(x.id)) return x;
+          const dt = new Date(x.date+'T12:00:00');
+          dt.setDate(dt.getDate() + daysDelta);
+          const sibDate = dt.toISOString().slice(0,10);
+          return {...x, ...restV, date:sibDate, month:sibDate.slice(0,7), recurrenceGroupId:gid, executed:x.executed};
+        })}));
+        toast(`${targets.length} gasto(s) actualizado(s)`);
       }
-      setData(d => ({...d, expenses:d.expenses.map(x => targets.has(x.id) ? {...x,...base} : x)}));
-      toast(`${targets.size} gasto(s) actualizado(s)`);
     } else {
       const base = {...v, month:(v.date||'').slice(0,7), executed:v.status==='executed'};
       setData(d => ({
