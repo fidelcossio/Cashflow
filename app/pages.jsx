@@ -941,8 +941,8 @@ function CreditPage({ data, setData, month, setMonth }) {
   const totalThisMonthBag = usM(() => sumByCurrency(data.creditCard, i=>getCCPaymentForMonth(i,month), getItemCur), [data.creditCard, month]);
 
   const hasIndefiniteSubs = usM(() => data.creditCard.some(i=>i.type==='subscription'&&!i.endMonth&&getCCPaymentForMonth(i,month)>0), [data.creditCard, month]);
-  const totalCapitalBag = usM(() => sumByCurrency(data.creditCard.filter(i=>calcRemainingCapital(i)!=null), i=>calcRemainingCapital(i), getItemCur), [data.creditCard]);
-  const totalInterestBag = usM(() => sumByCurrency(data.creditCard.filter(i=>calcRemainingInterest(i)!=null), i=>calcRemainingInterest(i), getItemCur), [data.creditCard]);
+  const totalCapitalBag = usM(() => sumByCurrency(data.creditCard.filter(i=>calcRemainingCapital(i,month)!=null), i=>calcRemainingCapital(i,month), getItemCur), [data.creditCard, month]);
+  const totalInterestBag = usM(() => sumByCurrency(data.creditCard.filter(i=>calcRemainingInterest(i,month)!=null), i=>calcRemainingInterest(i,month), getItemCur), [data.creditCard, month]);
 
   const itemsByCard = usM(() => {
     const map = {};
@@ -1007,8 +1007,8 @@ function CreditPage({ data, setData, month, setMonth }) {
           {data.creditCards.filter(c=>c.active!==false).map(card => {
             const cardItems = itemsByCard[card.id]||[];
             const cardPay = cardItems.reduce((s,i)=>s+getCCPaymentForMonth(i,month),0);
-            const cardCap = cardItems.reduce((s,i)=>{const v=calcRemainingCapital(i);return v!=null?s+v:s;},0);
-            const cardInt = cardItems.reduce((s,i)=>{const v=calcRemainingInterest(i);return v!=null?s+v:s;},0);
+            const cardCap = cardItems.reduce((s,i)=>{const v=calcRemainingCapital(i,month);return v!=null?s+v:s;},0);
+            const cardInt = cardItems.reduce((s,i)=>{const v=calcRemainingInterest(i,month);return v!=null?s+v:s;},0);
             const isOp = !!openCards[card.id];
             return <Card key={card.id} pad="none">
               <button className="card-pad row-between" style={{width:'100%',textAlign:'left',cursor:'pointer'}}
