@@ -137,6 +137,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
   const toast = useToast();
   const [confirm, confirmNode] = useConfirm();
   const [modal, setModal] = usS(null); // null | 'new-entry' | {editEntry:id} | 'new-group' | {editGroup:id} | 'notes'
+  const [budgetItemEdit, setBudgetItemEdit] = usS(null); // {type:'cc'|'exp', item}
   const [groupBy, setGroupBy] = usS('group');
   const [openGroups, setOpenGroups] = usS({ __sin_grupo: true });
   const toggleGroup = (k) => setOpenGroups(p => ({...p, [k]: !p[k]}));
@@ -440,7 +441,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
         <button className="card-pad row-between" style={{ width:'100%', textAlign:'left', cursor:'pointer' }}
           onClick={() => { if (!dragItem) toggleGroup(gKey); }}>
           <div className="row" style={{ gap:10 }}>
-            <span style={{ fontSize:12, color:'var(--text-3)', transform:isOpen?'rotate(90deg)':'rotate(0)', display:'inline-block', transition:'transform .2s' }}>▶</span>
             <div>
               <div className="row" style={{gap:8,alignItems:'center'}}>
                 {isPocket && <span style={{color:pocketColor,fontSize:13,fontWeight:700,lineHeight:1}}>↳</span>}
@@ -452,9 +452,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
                   </button>
                 )}
               </div>
-              {isPocket && section.parentAccountName && (
-                <div style={{fontSize:11,color:'var(--text-3)',marginTop:1}}>Bolsillo de {section.parentAccountName}</div>
-              )}
             </div>
           </div>
           <div className="row" style={{gap:12}}>
@@ -472,7 +469,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
           return <div style={{padding:'0 16px 8px',display:'flex',alignItems:'center',gap:8}}>
             <div style={{flex:1}}><Bar pct={pct} tone={barTone}/></div>
             <span style={{fontSize:12,fontWeight:700,color:barColor,flexShrink:0,fontVariantNumeric:'tabular-nums'}}>
-              {fmtCompact(section.goal,'COP')}
+              {fmtNum(section.goal,'COP')}
             </span>
           </div>;
         })()}
@@ -532,14 +529,14 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 <div data-dh style={{cursor:'grab',display:'contents'}}>
                   <CategoryDot category={cc.category}/>
                 </div>
-                <div className="grow" style={{minWidth:0}}>
+                <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setBudgetItemEdit({type:'cc',item:cc})}>
                   <div className="tx-title truncate" style={cc.executed?{textDecoration:'line-through'}:{}}>{cc.description}</div>
                   <div className="tx-sub">
                     <span className={`chip ${ccTypeChip(cc.type)}`} style={{fontSize:9,padding:'0 4px',marginRight:4}}>{ccTypeLabel(cc.type)}</span>
                     {cc.type==='installment'&&`${cc.installNum}/${cc.installTotal} · `}
                     {formatDate(cc.purchaseDate)}
                   </div>
-                </div>
+                </button>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <button className="btn-ico sm"
                     style={{color:cc.executed?'var(--positive)':'var(--text-3)'}}
@@ -566,13 +563,13 @@ function BudgetPage({ data, setData, month, setMonth }) {
                 <div data-dh style={{cursor:'grab',display:'contents'}}>
                   <CategoryDot category={exp.category}/>
                 </div>
-                <div className="grow" style={{minWidth:0}}>
+                <button className="grow" style={{textAlign:'left',minWidth:0}} onClick={()=>setBudgetItemEdit({type:'exp',item:exp})}>
                   <div className="tx-title truncate" style={exp.executed?{textDecoration:'line-through'}:{}}>{exp.description||exp.catLabel}</div>
                   <div className="tx-sub" style={{display:'flex',alignItems:'center',gap:4}}>
                     {exp.recurrenceGroupId && <span className="chip" style={{fontSize:9,padding:'0 4px'}}>{recurrenceLabel(exp.recurrence)}</span>}
                     <span>{formatDate(exp.date)}</span>
                   </div>
-                </div>
+                </button>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <button className="btn-ico sm"
                     style={{color:exp.executed?'var(--positive)':'var(--text-3)'}}
@@ -614,6 +611,26 @@ function BudgetPage({ data, setData, month, setMonth }) {
     <Modal open={modal==='notes'} onClose={()=>setModal(null)} title={`Anotaciones · ${formatMonthLabel(month)}`} size="sm">
       <NotesForm value={noteText} onSave={val=>{setData(d=>({...d,budgetNotes:{...(d.budgetNotes||{}),[month]:val}}));toast('Anotaciones guardadas');setModal(null);}} onClose={()=>setModal(null)}/>
     </Modal>
+
+    {/* Edit group / account for CC or expense item */}
+    <Modal open={!!budgetItemEdit} onClose={()=>setBudgetItemEdit(null)} title="Grupo y cuenta" size="sm">
+      {budgetItemEdit && <BudgetItemAssignForm
+        data={data} groups={groups} editInfo={budgetItemEdit}
+        onClose={()=>setBudgetItemEdit(null)}
+        onSave={(grp,acc)=>{
+          if (budgetItemEdit.type==='cc') {
+            const item=budgetItemEdit.item;
+            const asgns=(data.ccBudgetAssignments||[]).filter(a=>a.ccKey!==item.ccKey);
+            const existing=(data.ccBudgetAssignments||[]).find(a=>a.ccKey===item.ccKey);
+            setData(d=>({...d,ccBudgetAssignments:[...asgns,{...(existing||{id:uid(),ccKey:item.ccKey,executed:item.executed}),groupId:grp||null,accountId:acc||null}]}));
+          } else {
+            const item=budgetItemEdit.item;
+            setData(d=>({...d,expenses:d.expenses.map(x=>x.id===item.expId?{...x,groupId:grp||null,accountId:acc||null}:x)}));
+          }
+          toast('Guardado'); setBudgetItemEdit(null);
+        }}
+      />}
+    </Modal>
     {confirmNode}
   </div>;
 }
@@ -631,6 +648,32 @@ function GroupForm({ groups, initial, onClose, onSave, onDelete }) {
       {onDelete && <button className="btn btn-negative" onClick={onDelete}>Eliminar</button>}
       <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
       <button className="btn btn-primary" disabled={!name.trim()} onClick={()=>onSave({name,goal})}>Guardar</button>
+    </div>
+  </div>;
+}
+
+function BudgetItemAssignForm({ data, groups, editInfo, onSave, onClose }) {
+  const { useState: usS2 } = React;
+  const item = editInfo.item;
+  const [grp, setGrp] = usS2(item.groupId||'');
+  const [acc, setAcc] = usS2(item.accountId||'');
+  return <div>
+    <p className="muted" style={{fontSize:13,marginBottom:12}}>{item.description}</p>
+    <div className="field"><label className="field-label">Grupo</label>
+      <CustomSelect className="select" value={grp} onChange={e=>setGrp(e.target.value)}>
+        <option value="">Sin grupo</option>
+        {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+      </CustomSelect>
+    </div>
+    <div className="field"><label className="field-label">Cuenta</label>
+      <CustomSelect className="select" value={acc} onChange={e=>setAcc(e.target.value)}>
+        <option value="">Sin asignar</option>
+        {sortAccountsHierarchical(data.accounts.filter(a=>a.active)).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+      </CustomSelect>
+    </div>
+    <div className="modal-actions">
+      <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+      <button className="btn btn-primary" onClick={()=>onSave(grp,acc)}>Guardar</button>
     </div>
   </div>;
 }
@@ -883,7 +926,6 @@ function ExpensesPage({ data, setData, month, setMonth }) {
               <button className="card-pad row-between" style={{width:'100%',textAlign:'left',cursor:'pointer',borderRadius:0}}
                 onClick={()=>{ if (!dragItem) toggleGroup(section.key); }}>
                 <div className="row" style={{gap:10}}>
-                  <span style={{fontSize:12,color:'var(--text-3)',transform:open?'rotate(90deg)':'none',display:'inline-block',transition:'transform .2s'}}>▶</span>
                   <div>
                     <div className="row" style={{gap:8,alignItems:'center'}}>
                       {isPocket && <span style={{color:pocketColor,fontSize:13,fontWeight:700,lineHeight:1}}>↳</span>}
@@ -895,7 +937,10 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                     )}
                   </div>
                 </div>
-                <span style={{fontSize:13,fontWeight:600}}><FmtBag bag={sTotalBag}/></span>
+                <div className="row" style={{gap:12}}>
+                  <span style={{fontSize:13,fontWeight:600}}><FmtBag bag={sTotalBag}/></span>
+                  <Icon.chevDown size={14} style={{transform:open?'rotate(180deg)':'none',transition:'transform .2s'}}/>
+                </div>
               </button>
               {open && <>
                 <div className="divider"/>

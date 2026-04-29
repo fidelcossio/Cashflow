@@ -152,7 +152,7 @@ function Dashboard({ data, setData, month, setMonth, goto }) {
     </div>
 
     {/* Upcoming + top cats */}
-    <div className="grid-auto" style={{ gridTemplateColumns: '1.2fr 1fr' }}>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
       <Card pad="none">
         <div className="card-pad row-between" style={{ paddingBottom: 10 }}>
           <div>
