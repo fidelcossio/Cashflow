@@ -31,25 +31,25 @@ function IncomeForm({ data, initial, onSave, onClose, onDelete }) {
     <div className="field-row field-row-2">
       <F label="Fecha"><input className="input" type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} /></F>
       <F label="Fuente">
-        <select className="select" value={f.sourceId} onChange={e => setF({ ...f, sourceId: e.target.value })}>
+        <CustomSelect className="select" value={f.sourceId} onChange={e => setF({ ...f, sourceId: e.target.value })}>
           {data.incomeSources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <F label="Descripción"><input className="input" value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder="Opcional" /></F>
     <div className="field-row field-row-2">
       <F label="Monto"><input className="input" type="number" step="0.01" value={f.amount} onChange={e => setF({ ...f, amount: e.target.value })} placeholder="0" /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
+        <CustomSelect className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
           <option value="COP">COP</option><option value="USD">USD</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <F label="Cuenta destino">
-      <select className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
+      <CustomSelect className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
         <option value="">Sin asignar</option>
         {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name} ({a.currency})</option>)}
-      </select>
+      </CustomSelect>
     </F>
     <label className="checkbox-row">
       <input type="checkbox" className="checkbox" checked={!!f.isRenta} onChange={e => setF({ ...f, isRenta: e.target.checked })} />
@@ -84,40 +84,40 @@ function BudgetForm({ data, initial, onSave, onClose, onDelete, defaultMonth, de
     <div className="field-row field-row-2">
       <F label="Mes"><input className="input" type="month" value={f.month} onChange={e => setF({ ...f, month: e.target.value })} /></F>
       <F label="Categoría">
-        <select className="select" value={f.categoryId} onChange={e => setF({ ...f, categoryId: e.target.value })}>
+        <CustomSelect className="select" value={f.categoryId} onChange={e => setF({ ...f, categoryId: e.target.value })}>
           {data.expenseCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <F label="Descripción"><input className="input" value={f.description} onChange={e => setF({ ...f, description: e.target.value })} placeholder="Ej: Arriendo, Netflix..." /></F>
     <div className="field-row field-row-2">
       <F label="Monto estimado"><input className="input" type="number" step="0.01" value={f.plannedAmount} onChange={e => setF({ ...f, plannedAmount: e.target.value })} placeholder="0" /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
+        <CustomSelect className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
           <option value="COP">COP</option><option value="USD">USD</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-2">
       <F label="Tipo">
-        <select className="select" value={f.isFixed ? 'fixed' : 'variable'} onChange={e => setF({ ...f, isFixed: e.target.value === 'fixed' })}>
+        <CustomSelect className="select" value={f.isFixed ? 'fixed' : 'variable'} onChange={e => setF({ ...f, isFixed: e.target.value === 'fixed' })}>
           <option value="fixed">Fija</option>
           <option value="variable">Variable</option>
-        </select>
+        </CustomSelect>
       </F>
       <F label="Cuenta asignada">
-        <select className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
+        <CustomSelect className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
           <option value="">Sin asignar</option>
           {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     </div>
     {groups.length > 0 && (
       <F label="Grupo (opcional)">
-        <select className="select" value={f.groupId || ''} onChange={e => setF({ ...f, groupId: e.target.value || null })}>
+        <CustomSelect className="select" value={f.groupId || ''} onChange={e => setF({ ...f, groupId: e.target.value || null })}>
           <option value="">Sin grupo</option>
           {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     )}
     <div className="modal-actions">
@@ -190,10 +190,10 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     {!isEdit && (
       <div className="field-row field-row-2">
         <F label="Tipo">
-          <select className="select" value={f.type} onChange={e => setWithDefault('type', e.target.value)}>
+          <CustomSelect className="select" value={f.type} onChange={e => setWithDefault('type', e.target.value)}>
             <option value="puntual">Puntual (fecha única)</option>
             <option value="recurrente">Recurrente</option>
-          </select>
+          </CustomSelect>
         </F>
         <F label={f.type === 'puntual' ? 'Fecha' : 'Fecha de inicio'}>
           <input className="input" type="date" value={f.date} onChange={e => setWithDefault('date', e.target.value)} />
@@ -207,11 +207,11 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     {!isEdit && f.type === 'recurrente' && (
       <div className="field-row field-row-2">
         <F label="Recurrencia">
-          <select className="select" value={f.recurrence} onChange={e => setWithDefault('recurrence', e.target.value)}>
+          <CustomSelect className="select" value={f.recurrence} onChange={e => setWithDefault('recurrence', e.target.value)}>
             <option value="weekly">Semanal</option>
             <option value="monthly">Mensual</option>
             <option value="yearly">Anual</option>
-          </select>
+          </CustomSelect>
         </F>
         <F label="Fecha de fin *">
           <input className="input" type="date" value={f.endDate || ''} onChange={e => set('endDate', e.target.value)}
@@ -228,25 +228,25 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     {isEdit && initial.recurrenceGroupId && (editScope === 'thisAndFuture' || editScope === 'all') && (
       <div className="field-row field-row-2">
         <F label="Recurrencia de la serie">
-          <select className="select" value={f.recurrence} onChange={e => set('recurrence', e.target.value)}>
+          <CustomSelect className="select" value={f.recurrence} onChange={e => set('recurrence', e.target.value)}>
             <option value="weekly">Semanal</option>
             <option value="monthly">Mensual</option>
             <option value="yearly">Anual</option>
-          </select>
+          </CustomSelect>
         </F>
         <F label="Convertir a">
-          <select className="select" value={f.type} onChange={e => set('type', e.target.value)}>
+          <CustomSelect className="select" value={f.type} onChange={e => set('type', e.target.value)}>
             <option value="recurrente">Recurrente (mantener serie)</option>
             <option value="puntual">Puntual (eliminar futuros)</option>
-          </select>
+          </CustomSelect>
         </F>
       </div>
     )}
     <div className="field-row field-row-2">
       <F label="Categoría">
-        <select className="select" value={f.categoryId} onChange={e => set('categoryId', e.target.value)}>
+        <CustomSelect className="select" value={f.categoryId} onChange={e => set('categoryId', e.target.value)}>
           {data.expenseCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
       <F label="Descripción">
         <input className="input" value={f.description} onChange={e => set('description', e.target.value)} placeholder="Ej: Mercado Éxito" />
@@ -255,23 +255,23 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     <div className="field-row field-row-3">
       <F label="Monto" span={2}><input className="input" type="number" step="0.01" value={f.amount} onChange={e => set('amount', e.target.value)} placeholder="0" /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
+        <CustomSelect className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
           <option value="COP">COP</option><option value="USD">USD</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <F label="Cuenta">
-      <select className="select" value={f.accountId || ''} onChange={e => set('accountId', e.target.value || null)}>
+      <CustomSelect className="select" value={f.accountId || ''} onChange={e => set('accountId', e.target.value || null)}>
         <option value="">Sin asignar</option>
         {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
-      </select>
+      </CustomSelect>
     </F>
     {groups.length > 0 && (
       <F label="Grupo de presupuesto">
-        <select className="select" value={f.groupId || ''} onChange={e => set('groupId', e.target.value || null)}>
+        <CustomSelect className="select" value={f.groupId || ''} onChange={e => set('groupId', e.target.value || null)}>
           <option value="">Sin grupo</option>
           {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     )}
     <label className="checkbox-row">
@@ -369,19 +369,19 @@ function CCItemForm({ data, initial, onSave, onClose, onDelete, defaultCardId })
     )}
     <div className="field-row field-row-2">
       <F label="Tarjeta">
-        <select className="select" value={f.cardId} onChange={e => handleCardChange(e.target.value)}>
+        <CustomSelect className="select" value={f.cardId} onChange={e => handleCardChange(e.target.value)}>
           <option value="">— Selecciona —</option>
           {data.creditCards.filter(c => c.active !== false).map(c => (
             <option key={c.id} value={c.id}>{c.name}{c.lastFour ? ` (••${c.lastFour})` : ''}</option>
           ))}
-        </select>
+        </CustomSelect>
       </F>
       <F label="Tipo">
-        <select className="select" value={f.type} onChange={e => handleTypeChange(e.target.value)}>
+        <CustomSelect className="select" value={f.type} onChange={e => handleTypeChange(e.target.value)}>
           <option value="single">Pago único (diferido)</option>
           <option value="installment">Compra a cuotas</option>
           <option value="subscription">Suscripción (recurrente)</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-2">
@@ -389,9 +389,9 @@ function CCItemForm({ data, initial, onSave, onClose, onDelete, defaultCardId })
         <input className="input" value={f.description} onChange={e => set('description', e.target.value)} placeholder="Ej: Supermercado / Televisor / Netflix" />
       </F>
       <F label="Categoría">
-        <select className="select" value={f.categoryId} onChange={e => set('categoryId', e.target.value)}>
+        <CustomSelect className="select" value={f.categoryId} onChange={e => set('categoryId', e.target.value)}>
           {data.expenseCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-3">
@@ -456,9 +456,9 @@ function CardForm({ initial, onSave, onClose, onDelete }) {
     <div className="field-row field-row-2">
       <F label="Últimos 4 dígitos"><input className="input" value={f.lastFour || ''} onChange={e => set('lastFour', e.target.value)} maxLength={4} placeholder="1234" /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
+        <CustomSelect className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
           <option value="COP">COP</option><option value="USD">USD</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-3">
@@ -511,9 +511,9 @@ function LoanForm({ data, initial, onSave, onClose, onDelete, isDebt }) {
     <div className="field-row field-row-2">
       <F label="Monto"><input className="input" type="number" step="0.01" value={f.amount} onChange={e => setF({ ...f, amount: e.target.value })} /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
+        <CustomSelect className="select" value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>
           <option value="COP">COP</option><option value="USD">USD</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-2">
@@ -543,25 +543,25 @@ function AccountForm({ data, initial, onSave, onClose, onDelete }) {
     <div className="field-row field-row-2">
       <F label="Banco / Origen"><input className="input" value={f.bank || ''} onChange={e => set('bank', e.target.value)} placeholder="Ej: Bancolombia" /></F>
       <F label="Moneda">
-        <select className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
+        <CustomSelect className="select" value={f.currency} onChange={e => set('currency', e.target.value)}>
           <option value="COP">COP</option><option value="USD">USD</option><option value="EUR">EUR</option>
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <div className="field-row field-row-2">
       <F label="Tipo">
-        <select className="select" value={f.type} onChange={e => set('type', e.target.value)}>
+        <CustomSelect className="select" value={f.type} onChange={e => set('type', e.target.value)}>
           <option value="checking">Cuenta Corriente</option>
           <option value="savings">Cuenta de Ahorros</option>
           <option value="cash">Efectivo</option>
           <option value="pocket">Bolsillo / Cajita</option>
-        </select>
+        </CustomSelect>
       </F>
       <F label="Cuenta padre (si es bolsillo)">
-        <select className="select" value={f.parentId || ''} onChange={e => set('parentId', e.target.value || null)}>
+        <CustomSelect className="select" value={f.parentId || ''} onChange={e => set('parentId', e.target.value || null)}>
           <option value="">— Ninguna (cuenta principal) —</option>
           {parentAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
+        </CustomSelect>
       </F>
     </div>
     <F label="Color">

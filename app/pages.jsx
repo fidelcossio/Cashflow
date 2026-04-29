@@ -55,19 +55,18 @@ function IncomePage({ data, setData, month, setMonth }) {
 
   // Inline account selector per income row
   const AccountSelect = ({ value, onChange }) => (
-    <select
+    <CustomSelect
       className="select"
-      style={{ fontSize: 12, padding: '2px 8px', minWidth: 0, maxWidth: 150, height: 28,
+      style={{ fontSize: 12, minWidth: 0, maxWidth: 150, height: 28,
         background: value ? 'var(--warning-soft,#FCE8C9)' : 'var(--surface-2)',
         color: value ? 'var(--warning-color,#B8721A)' : 'var(--text-2)' }}
       value={value || ''}
       onChange={e => onChange(e.target.value || null)}
-      onClick={e => e.stopPropagation()}
     >
       <option value="">Planificado</option>
       {data.accounts.filter(a => a.active).map(a =>
         <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
-    </select>
+    </CustomSelect>
   );
 
   const FmtBag = ({ bag }) => Object.entries(bag).filter(([,v]) => v > 0).map(([cur, val]) =>
@@ -274,14 +273,14 @@ function BudgetPage({ data, setData, month, setMonth }) {
 
   // Inline EstadoSelect — same style as IncomePage AccountSelect
   const EstadoSelect = ({ value, onChange }) => (
-    <select className="select"
-      style={{ fontSize:12, padding:'2px 8px', minWidth:0, maxWidth:150, height:28,
+    <CustomSelect className="select"
+      style={{ fontSize:12, minWidth:0, maxWidth:150, height:28,
         background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)',
         color:value?'var(--warning-color,#B8721A)':'var(--text-2)' }}
-      value={value||''} onChange={e=>onChange(e.target.value||null)} onClick={e=>e.stopPropagation()}>
+      value={value||''} onChange={e=>onChange(e.target.value||null)}>
       <option value="">Planificado</option>
       {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
-    </select>
+    </CustomSelect>
   );
 
   // Save / delete entry
@@ -687,14 +686,14 @@ function ExpensesPage({ data, setData, month, setMonth }) {
 
   // Inline account selector — same style as IncomePage AccountSelect
   const AccSelect = ({value, onChange}) => (
-    <select className="select"
-      style={{fontSize:12, padding:'2px 8px', minWidth:0, maxWidth:150, height:28,
+    <CustomSelect className="select"
+      style={{fontSize:12, minWidth:0, maxWidth:150, height:28,
         background:value?'var(--warning-soft,#FCE8C9)':'var(--surface-2)',
         color:value?'var(--warning-color,#B8721A)':'var(--text-2)'}}
-      value={value||''} onChange={e=>onChange(e.target.value||null)} onClick={e=>e.stopPropagation()}>
+      value={value||''} onChange={e=>onChange(e.target.value||null)}>
       <option value="">Planificado</option>
       {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
-    </select>
+    </CustomSelect>
   );
 
   // Save
@@ -1329,9 +1328,9 @@ function LoansPage({ data, setData }) {
         <div className="field"><label className="field-label">Fecha</label><input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
         <div className="field"><label className="field-label">Monto</label><input className="input" type="number" value={amount} onChange={e=>setAmt(e.target.value)}/></div>
         <div className="field"><label className="field-label">Moneda</label>
-          <select className="select" value={currency} onChange={e=>setCurrency(e.target.value)}>
+          <CustomSelect className="select" value={currency} onChange={e=>setCurrency(e.target.value)}>
             <option value="COP">COP</option><option value="USD">USD</option>
-          </select>
+          </CustomSelect>
         </div>
       </div>
       {hasSameCur&&hasOtherCur&&amount&&parseFloat(amount)>0&&(
@@ -1601,23 +1600,23 @@ function ConfigPage({ data, setData, theme, setTheme }) {
       <div className="field-row">
         <div className="field"><label className="field-label">Banco</label><input className="input" value={form.bank||''} onChange={e=>set('bank',e.target.value)} placeholder="Ej: Bancolombia"/></div>
         <div className="field"><label className="field-label">Moneda</label>
-          <select className="select" value={form.currency} onChange={e=>set('currency',e.target.value)}>
+          <CustomSelect className="select" value={form.currency} onChange={e=>set('currency',e.target.value)}>
             <option value="COP">COP</option><option value="USD">USD</option><option value="EUR">EUR</option>
-          </select>
+          </CustomSelect>
         </div>
       </div>
       <div className="field-row">
         <div className="field"><label className="field-label">Tipo</label>
-          <select className="select" value={form.type} onChange={e=>set('type',e.target.value)}>
+          <CustomSelect className="select" value={form.type} onChange={e=>set('type',e.target.value)}>
             <option value="checking">Corriente</option><option value="savings">Ahorros</option>
             <option value="cash">Efectivo</option><option value="pocket">Bolsillo</option>
-          </select>
+          </CustomSelect>
         </div>
         <div className="field"><label className="field-label">Cuenta padre (bolsillo)</label>
-          <select className="select" value={form.parentId||''} onChange={e=>set('parentId',e.target.value||null)}>
+          <CustomSelect className="select" value={form.parentId||''} onChange={e=>set('parentId',e.target.value||null)}>
             <option value="">— Principal —</option>
             {parentAccounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
+          </CustomSelect>
         </div>
       </div>
       <div className="field"><label className="field-label">Color</label>

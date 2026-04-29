@@ -213,6 +213,137 @@ function Stat({ label, value, sub, tone, icon }) {
   </div>;
 }
 
+// ── CustomSelect (portal-based, design-system-aware) ─────
+function CustomSelect({ value, onChange, className = '', style, children, disabled = false, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0, openUp: false });
+  const btnRef = useRef(null);
+  const listRef = useRef(null);
+
+  // Parse <option> children
+  const options = useMemo(() => {
+    const result = [];
+    React.Children.forEach(children, child => {
+      if (!child) return;
+      if (child.type === 'option') {
+        result.push({ value: String(child.props.value ?? ''), label: child.props.children, disabled: !!child.props.disabled });
+      }
+    });
+    return result;
+  }, [children]);
+
+  const selectedLabel = useMemo(() => {
+    const found = options.find(o => o.value === String(value ?? ''));
+    return found ? found.label : (placeholder || '—');
+  }, [options, value, placeholder]);
+
+  const openDropdown = () => {
+    if (disabled) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+    setPos({
+      top: openUp ? rect.top + window.scrollY : rect.bottom + window.scrollY + 3,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      openUp,
+    });
+    setOpen(true);
+  };
+
+  // Close on outside click / Escape
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (!listRef.current?.contains(e.target) && !btnRef.current?.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+
+  const select = (optVal) => {
+    if (onChange) onChange({ target: { value: optVal } });
+    setOpen(false);
+  };
+
+  const dropdownStyle = {
+    position: 'absolute',
+    top: pos.openUp ? 'auto' : pos.top,
+    bottom: pos.openUp ? `calc(100vh - ${pos.top}px)` : 'auto',
+    left: pos.left,
+    width: Math.max(pos.width, 160),
+    zIndex: 99999,
+    background: 'var(--surface)',
+    border: '1px solid var(--line)',
+    borderRadius: 10,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+    padding: '4px 0',
+    maxHeight: 260,
+    overflowY: 'auto',
+  };
+
+  const itemStyle = (opt) => ({
+    display: 'block',
+    width: '100%',
+    textAlign: 'left',
+    padding: '8px 14px',
+    fontSize: 14,
+    fontFamily: 'inherit',
+    color: opt.disabled ? 'var(--text-3)' : 'var(--text)',
+    background: String(opt.value) === String(value ?? '') ? 'var(--accent-soft)' : 'transparent',
+    fontWeight: String(opt.value) === String(value ?? '') ? 600 : 400,
+    cursor: opt.disabled ? 'default' : 'pointer',
+    border: 'none',
+    borderRadius: 6,
+    margin: '1px 4px',
+    width: 'calc(100% - 8px)',
+    boxSizing: 'border-box',
+  });
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`select ${className}`}
+        style={{ textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, ...style }}
+        onClick={openDropdown}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedLabel}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'var(--text-3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && ReactDOM.createPortal(
+        <div ref={listRef} style={dropdownStyle} role="listbox">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              role="option"
+              aria-selected={String(opt.value) === String(value ?? '')}
+              style={itemStyle(opt)}
+              disabled={opt.disabled}
+              onClick={() => !opt.disabled && select(opt.value)}
+              onMouseEnter={e => { if (!opt.disabled) e.currentTarget.style.background = 'var(--accent-soft)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = String(opt.value) === String(value ?? '') ? 'var(--accent-soft)' : 'transparent'; }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // Expose
 Object.assign(window, {
   ToastProvider, useToast,
@@ -221,4 +352,5 @@ Object.assign(window, {
   Amount, Bar, Empty,
   Segmented, MonthPicker, SectionHead, PageHeader, Card, Stat,
   CATEGORY_SLOT, CATEGORY_ICON,
+  CustomSelect,
 });
