@@ -253,10 +253,24 @@ function BudgetPage({ data, setData, month, setMonth }) {
       ccVirtual.forEach(e => put(e.accountId||'__none__','cc',e));
       expVirtual.forEach(e => put(e.accountId||'__none__','exp',e));
       if (!byAcc['__none__']) byAcc['__none__']={entries:[],cc:[],exp:[]};
-      return Object.entries(byAcc).map(([key,v]) => {
+      const raw = Object.entries(byAcc).map(([key,v]) => {
         const acc = key==='__none__' ? null : data.accounts.find(a=>a.id===key);
-        return { id:key, name:acc?acc.name:'Sin cuenta', goal:null, gKey:key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp };
-      }).sort((a,b) => a.id==='__none__'?-1:b.id==='__none__'?1:a.name.localeCompare(b.name));
+        const parent = acc?.parentId ? data.accounts.find(a=>a.id===acc.parentId) : null;
+        return { id:key, name:acc?acc.name:'Sin cuenta', goal:null, gKey:key, sEntries:v.entries, sCCItems:v.cc, sExpItems:v.exp,
+          accountParentId: acc?.parentId||null, accountColor: acc?.color||null,
+          parentAccountName: parent?.name||null, parentAccountColor: parent?.color||null };
+      });
+      // Hierarchical sort: none first, then parents alphabetically with their children below
+      const none = raw.filter(s=>s.id==='__none__');
+      const parents = raw.filter(s=>s.id!=='__none__'&&!s.accountParentId).sort((a,b)=>a.name.localeCompare(b.name));
+      const children = raw.filter(s=>s.accountParentId);
+      const sorted = [...none];
+      parents.forEach(p => {
+        sorted.push(p);
+        children.filter(c=>c.accountParentId===p.id).sort((a,b)=>a.name.localeCompare(b.name)).forEach(c=>sorted.push(c));
+      });
+      children.filter(c=>!parents.find(p=>p.id===c.accountParentId)).sort((a,b)=>a.name.localeCompare(b.name)).forEach(c=>sorted.push(c));
+      return sorted;
     } else {
       // category view
       const byCat = {};
@@ -415,7 +429,10 @@ function BudgetPage({ data, setData, month, setMonth }) {
       const isOpen = !!openGroups[gKey];
 
       const isDragTarget = canDrag && dragOverGroup === gKey && dragItem?.sectionKey !== gKey;
-      return <Card key={gKey} pad="none" style={{ marginBottom:8, outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s' }}
+      const isPocket = groupBy==='account' && !!section.accountParentId;
+      const pocketColor = isPocket ? (section.parentAccountColor||section.accountColor||'var(--accent)') : null;
+      return <Card key={gKey} pad="none" style={{ marginBottom:8, outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s',
+          ...(isPocket && { marginLeft:16, borderLeft:`3px solid ${pocketColor}` }) }}
         onDragOver={canDrag ? e=>handleDragOver(e,gKey) : undefined}
         onDrop={canDrag ? e=>handleDrop(e,gKey,section) : undefined}
         onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
@@ -424,13 +441,21 @@ function BudgetPage({ data, setData, month, setMonth }) {
           onClick={() => { if (!dragItem) toggleGroup(gKey); }}>
           <div className="row" style={{ gap:10 }}>
             <span style={{ fontSize:12, color:'var(--text-3)', transform:isOpen?'rotate(90deg)':'rotate(0)', display:'inline-block', transition:'transform .2s' }}>▶</span>
-            <span className="h4">{section.name}</span>
-            <span className="chip" style={{ fontSize:10, padding:'1px 6px' }}>{totalCount}</span>
-            {groupBy==='group' && section.id && (
-              <button className="btn-ico sm" style={{marginLeft:4}} onClick={e=>{e.stopPropagation();setModal({editGroup:section.id,data:section});}}>
-                <Icon.edit size={11}/>
-              </button>
-            )}
+            <div>
+              <div className="row" style={{gap:8,alignItems:'center'}}>
+                {isPocket && <span style={{color:pocketColor,fontSize:13,fontWeight:700,lineHeight:1}}>↳</span>}
+                <span className="h4">{section.name}</span>
+                <span className="chip" style={{ fontSize:10, padding:'1px 6px' }}>{totalCount}</span>
+                {groupBy==='group' && section.id && (
+                  <button className="btn-ico sm" style={{marginLeft:4}} onClick={e=>{e.stopPropagation();setModal({editGroup:section.id,data:section});}}>
+                    <Icon.edit size={11}/>
+                  </button>
+                )}
+              </div>
+              {isPocket && section.parentAccountName && (
+                <div style={{fontSize:11,color:'var(--text-3)',marginTop:1}}>Bolsillo de {section.parentAccountName}</div>
+              )}
+            </div>
           </div>
           <div className="row" style={{gap:12}}>
             <span style={{fontSize:12,fontWeight:600,color:'var(--text)'}}>
@@ -677,10 +702,23 @@ function ExpensesPage({ data, setData, month, setMonth }) {
     } else if (groupBy==='account') {
       const byAcc = {};
       monthExpenses.forEach(exp => { const k=exp.accountId||'__none__'; if(!byAcc[k])byAcc[k]=[]; byAcc[k].push(exp); });
-      return Object.entries(byAcc).map(([k,items]) => {
+      const raw = Object.entries(byAcc).map(([k,items]) => {
         const acc = k==='__none__'?null:data.accounts.find(a=>a.id===k);
-        return { key:k, label:acc?acc.name:'Sin cuenta', items };
-      }).sort((a,b)=>a.label==='Sin cuenta'?-1:b.label==='Sin cuenta'?1:a.label.localeCompare(b.label));
+        const parent = acc?.parentId ? data.accounts.find(a=>a.id===acc.parentId) : null;
+        return { key:k, label:acc?acc.name:'Sin cuenta', items,
+          accountParentId: acc?.parentId||null, accountColor: acc?.color||null,
+          parentAccountName: parent?.name||null, parentAccountColor: parent?.color||null };
+      });
+      const none = raw.filter(s=>s.key==='__none__');
+      const parents = raw.filter(s=>s.key!=='__none__'&&!s.accountParentId).sort((a,b)=>a.label.localeCompare(b.label));
+      const children = raw.filter(s=>s.accountParentId);
+      const sorted = [...none];
+      parents.forEach(p => {
+        sorted.push(p);
+        children.filter(c=>c.accountParentId===p.key).sort((a,b)=>a.label.localeCompare(b.label)).forEach(c=>sorted.push(c));
+      });
+      children.filter(c=>!parents.find(p=>p.key===c.accountParentId)).sort((a,b)=>a.label.localeCompare(b.label)).forEach(c=>sorted.push(c));
+      return sorted;
     } else {
       const byCat = {};
       monthExpenses.forEach(exp => { const k=exp.categoryId||'__none__'; if(!byCat[k])byCat[k]=[]; byCat[k].push(exp); });
@@ -834,8 +872,11 @@ function ExpensesPage({ data, setData, month, setMonth }) {
             const sExecBag = sumByCurrency(section.items.filter(e=>e.executed), e=>parseFloat(e.amount)||0, e=>e.currency);
             const sPendBag = sumByCurrency(section.items.filter(e=>!e.executed), e=>parseFloat(e.amount)||0, e=>e.currency);
             const isDragTarget = canDrag && dragOverGroup === section.key && dragItem?.sectionKey !== section.key;
+            const isPocket = groupBy==='account' && !!section.accountParentId;
+            const pocketColor = isPocket ? (section.parentAccountColor||section.accountColor||'var(--accent)') : null;
             return <Card key={section.key} pad="none"
-              style={{outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s'}}
+              style={{outline:isDragTarget?'2px solid var(--accent)':'none', outlineOffset:2, transition:'outline .1s',
+                ...(isPocket && { marginLeft:16, borderLeft:`3px solid ${pocketColor}` })}}
               onDragOver={canDrag ? e=>handleDragOver(e,section.key) : undefined}
               onDrop={canDrag ? e=>handleDrop(e,section.key,section) : undefined}
               onDragLeave={canDrag ? e=>{ if (!e.currentTarget.contains(e.relatedTarget)) setDragOverGroup(null); } : undefined}>
@@ -843,8 +884,16 @@ function ExpensesPage({ data, setData, month, setMonth }) {
                 onClick={()=>{ if (!dragItem) toggleGroup(section.key); }}>
                 <div className="row" style={{gap:10}}>
                   <span style={{fontSize:12,color:'var(--text-3)',transform:open?'rotate(90deg)':'none',display:'inline-block',transition:'transform .2s'}}>▶</span>
-                  <span className="h4">{section.label}</span>
-                  <span className="chip" style={{fontSize:10,padding:'1px 6px'}}>{section.items.length}</span>
+                  <div>
+                    <div className="row" style={{gap:8,alignItems:'center'}}>
+                      {isPocket && <span style={{color:pocketColor,fontSize:13,fontWeight:700,lineHeight:1}}>↳</span>}
+                      <span className="h4">{section.label}</span>
+                      <span className="chip" style={{fontSize:10,padding:'1px 6px'}}>{section.items.length}</span>
+                    </div>
+                    {isPocket && section.parentAccountName && (
+                      <div style={{fontSize:11,color:'var(--text-3)',marginTop:1}}>Bolsillo de {section.parentAccountName}</div>
+                    )}
+                  </div>
                 </div>
                 <span style={{fontSize:13,fontWeight:600}}><FmtBag bag={sTotalBag}/></span>
               </button>
