@@ -64,7 +64,7 @@ function IncomePage({ data, setData, month, setMonth }) {
       onChange={e => onChange(e.target.value || null)}
     >
       <option value="">Planificado</option>
-      {data.accounts.filter(a => a.active).map(a =>
+      {sortAccountsHierarchical(data.accounts.filter(a => a.active)).map(a =>
         <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
     </CustomSelect>
   );
@@ -279,7 +279,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
         color:value?'var(--warning-color,#B8721A)':'var(--text-2)' }}
       value={value||''} onChange={e=>onChange(e.target.value||null)}>
       <option value="">Planificado</option>
-      {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+      {sortAccountsHierarchical(data.accounts.filter(a=>a.active)).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
     </CustomSelect>
   );
 
@@ -426,7 +426,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
             <span style={{ fontSize:12, color:'var(--text-3)', transform:isOpen?'rotate(90deg)':'rotate(0)', display:'inline-block', transition:'transform .2s' }}>▶</span>
             <span className="h4">{section.name}</span>
             <span className="chip" style={{ fontSize:10, padding:'1px 6px' }}>{totalCount}</span>
-            {section.id && section.goal && <span className="muted-2" style={{fontSize:11}}>Meta: {fmtCompact(section.goal,'COP')}</span>}
             {groupBy==='group' && section.id && (
               <button className="btn-ico sm" style={{marginLeft:4}} onClick={e=>{e.stopPropagation();setModal({editGroup:section.id,data:section});}}>
                 <Icon.edit size={11}/>
@@ -443,7 +442,15 @@ function BudgetPage({ data, setData, month, setMonth }) {
         </button>
 
         {/* Goal bar */}
-        {pct!==null && isOpen && <div style={{padding:'0 16px 8px'}}><Bar pct={pct} tone={barTone}/></div>}
+        {pct!==null && isOpen && (() => {
+          const barColor = barTone==='positive'?'var(--positive)':barTone==='negative'?'var(--negative)':barTone==='warning'?'var(--warning)':'var(--accent)';
+          return <div style={{padding:'0 16px 8px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{flex:1}}><Bar pct={pct} tone={barTone}/></div>
+            <span style={{fontSize:12,fontWeight:700,color:barColor,flexShrink:0,fontVariantNumeric:'tabular-nums'}}>
+              {fmtCompact(section.goal,'COP')}
+            </span>
+          </div>;
+        })()}
 
         {/* Items */}
         {isOpen && <>
@@ -692,7 +699,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
         color:value?'var(--warning-color,#B8721A)':'var(--text-2)'}}
       value={value||''} onChange={e=>onChange(e.target.value||null)}>
       <option value="">Planificado</option>
-      {data.accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
+      {sortAccountsHierarchical(data.accounts.filter(a=>a.active)).map(a=><option key={a.id} value={a.id}>{a.parentId?'↳ ':''}{a.name}</option>)}
     </CustomSelect>
   );
 

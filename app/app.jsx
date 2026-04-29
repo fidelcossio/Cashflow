@@ -13,7 +13,8 @@ const NAV = [
   { id: 'loans', label: 'Préstamos', icon: 'loan' },
   { id: 'config', label: 'Ajustes', icon: 'cog' },
 ];
-const BOTTOM_NAV = ['dashboard', 'expenses', 'budget', 'credit', 'more'];
+const BOTTOM_NAV = ['dashboard', 'income', 'budget', 'expenses', 'more'];
+const MORE_PAGES = NAV.slice(4).map(n => n.id); // ['credit', 'loans', 'config']
 
 // Seed demo data if empty (so the prototype has something to show)
 function seedIfEmpty(d) {
@@ -92,7 +93,7 @@ function BottomNav({ page, setPage, openMore }) {
     <div className="bottom-nav-inner">
       {BOTTOM_NAV.map(id => {
         if (id === 'more') {
-          return <button key={id} className={`bn-item ${['income', 'loans', 'config'].includes(page) ? 'active' : ''}`} onClick={openMore}>
+          return <button key={id} className={`bn-item ${MORE_PAGES.includes(page) ? 'active' : ''}`} onClick={openMore}>
             <span className="ico"><Icon.menu size={22} /></span><span>Más</span>
           </button>;
         }

@@ -48,7 +48,7 @@ function IncomeForm({ data, initial, onSave, onClose, onDelete }) {
     <F label="Cuenta destino">
       <CustomSelect className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
         <option value="">Sin asignar</option>
-        {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name} ({a.currency})</option>)}
+        {sortAccountsHierarchical(data.accounts.filter(a => a.active)).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name} ({a.currency})</option>)}
       </CustomSelect>
     </F>
     <label className="checkbox-row">
@@ -108,7 +108,7 @@ function BudgetForm({ data, initial, onSave, onClose, onDelete, defaultMonth, de
       <F label="Cuenta asignada">
         <CustomSelect className="select" value={f.accountId || ''} onChange={e => setF({ ...f, accountId: e.target.value || null })}>
           <option value="">Sin asignar</option>
-          {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
+          {sortAccountsHierarchical(data.accounts.filter(a => a.active)).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
         </CustomSelect>
       </F>
     </div>
@@ -263,7 +263,7 @@ function ExpenseForm({ data, initial, onSave, onClose, onDelete, editScope }) {
     <F label="Cuenta">
       <CustomSelect className="select" value={f.accountId || ''} onChange={e => set('accountId', e.target.value || null)}>
         <option value="">Sin asignar</option>
-        {data.accounts.filter(a => a.active).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
+        {sortAccountsHierarchical(data.accounts.filter(a => a.active)).map(a => <option key={a.id} value={a.id}>{a.parentId ? '↳ ' : ''}{a.name}</option>)}
       </CustomSelect>
     </F>
     {groups.length > 0 && (

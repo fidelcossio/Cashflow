@@ -206,6 +206,25 @@ function calcRemainingInterest(item, month) {
   return Math.round(cap * (parseFloat(item.interestRate) || 0) / 100);
 }
 
+// ── Hierarchical account sort: parents first, children right below their parent ──
+function sortAccountsHierarchical(accounts) {
+  const parents = accounts.filter(a => !a.parentId);
+  const childMap = {};
+  accounts.filter(a => a.parentId).forEach(c => {
+    if (!childMap[c.parentId]) childMap[c.parentId] = [];
+    childMap[c.parentId].push(c);
+  });
+  const result = [];
+  parents.forEach(p => {
+    result.push(p);
+    (childMap[p.id] || []).forEach(c => result.push(c));
+  });
+  // orphan children whose parent isn't in the list
+  accounts.filter(a => a.parentId && !parents.find(p => p.id === a.parentId))
+    .forEach(c => result.push(c));
+  return result;
+}
+
 // Expose to window
 Object.assign(window, {
   STORAGE_KEY, defaultData, loadData, saveData,
@@ -216,4 +235,5 @@ Object.assign(window, {
   generateRecurrenceDates, getExpenseMonth, isExpenseOverdue, recurrenceLabel,
   calcStartMonth, getCCPaymentForMonth,
   calcRemainingCapital, calcRemainingInterest,
+  sortAccountsHierarchical,
 });
