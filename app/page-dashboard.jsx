@@ -27,7 +27,8 @@ function Dashboard({ data, setData, month, setMonth, goto }) {
     const bag = {};
     data.creditCard.forEach(item => {
       const pay = getCCPaymentForMonth(item, month);
-      if (pay > 0) bag[item.currency] = (bag[item.currency] || 0) + pay;
+      const cur = item.currency || 'COP';
+      if (pay > 0) bag[cur] = (bag[cur] || 0) + pay;
     });
     return bag;
   }, [data.creditCard, month]);
@@ -85,7 +86,7 @@ function Dashboard({ data, setData, month, setMonth, goto }) {
         <div className="amount-xl" style={{ marginTop: 8 }}>
           <span className="ccy-tag">COP</span>{fmtNum(toAssign.COP || 0, 'COP')}
         </div>
-        {Object.entries(toAssign).filter(([c]) => c !== 'COP').map(([c, v]) => (
+        {Object.entries(toAssign).filter(([c]) => c && c !== 'COP' && c !== 'undefined').map(([c, v]) => (
           <div key={c} className="amount-md" style={{ opacity: 0.85, marginTop: 4 }}>
             <span className="ccy-tag">{c}</span>{fmtNum(v, c)}
           </div>
@@ -152,7 +153,7 @@ function Dashboard({ data, setData, month, setMonth, goto }) {
     </div>
 
     {/* Upcoming + top cats */}
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap:16 }}>
       <Card pad="none">
         <div className="card-pad row-between" style={{ paddingBottom: 10 }}>
           <div>
