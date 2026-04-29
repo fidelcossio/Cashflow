@@ -74,7 +74,6 @@ function IncomePage({ data, setData, month, setMonth }) {
     <span key={cur} style={{ marginRight: 8 }}><span className="ccy-tag">{cur}</span>{fmtNum(val, cur)}</span>);
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Ingresos" subtitle="Registro de ingresos mensuales"
       right={<>
         <MonthPicker month={month} onChange={setMonth} />
@@ -97,21 +96,25 @@ function IncomePage({ data, setData, month, setMonth }) {
               const src = data.incomeSources.find(s => s.id === i.sourceId);
               const isRenta = i.isRenta !== false;
               return <div key={i.id} className="tx-row">
-                <div className="tx-icon cat-3"><Icon.arrowDown size={16}/></div>
+                <div className="tx-icon cat-3"><Icon.income size={16}/></div>
                 <button className="grow" style={{ textAlign:'left', minWidth:0 }}
                   onClick={() => setModal({ edit: i.id, data: i })}>
                   <div className="tx-title truncate">{i.description || src?.name || 'Ingreso'}</div>
-                  <div className="tx-sub">{formatDateLong(i.date)} {i.notes && <span>· {i.notes}</span>}</div>
+                  <div className="tx-sub" style={{ display:'flex', alignItems:'center', gap:4 }}>
+                    <span className={`chip ${isRenta ? 'chip-pos' : ''}`} style={{ fontSize:9, padding:'0 4px' }}>
+                      {isRenta ? 'Renta' : 'No renta'}
+                    </span>
+                    <span>{formatDate(i.date)}</span>
+                    {i.notes && <span>· {i.notes}</span>}
+                  </div>
                 </button>
-                <div style={{ display:'flex', alignItems:'center', gap: 8 }}>
-                  <span className={`chip ${isRenta ? 'chip-pos' : ''}`} style={{ fontSize:10, padding:'1px 6px' }}>
-                    {isRenta ? 'Renta' : 'No renta'}
+                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                  <button className="btn-ico sm" onClick={e=>{ e.stopPropagation(); del(i.id); }}>
+                    <Icon.trash size={12}/>
+                  </button>
+                  <span className="amount-sm text-pos" style={{ flexShrink:0 }}>
+                    <span className="ccy-tag">{i.currency}</span>{fmtNum(i.amount, i.currency)}
                   </span>
-                  <AccountSelect
-                    value={i.accountId}
-                    onChange={v => setData(d => ({ ...d, income: d.income.map(x => x.id === i.id ? {...x, accountId:v} : x) }))}
-                  />
-                  <div className="amount-sm text-pos"><span className="ccy-tag">{i.currency}</span>{fmtNum(i.amount, i.currency)}</div>
                 </div>
               </div>;
             })}
@@ -124,6 +127,7 @@ function IncomePage({ data, setData, month, setMonth }) {
     <Modal open={!!(modal && modal.edit)} onClose={() => setModal(null)} title="Editar ingreso">
       {modal && modal.edit && <IncomeForm data={data} initial={modal.data} onClose={() => setModal(null)} onSave={save} onDelete={() => del(modal.edit)}/>}
     </Modal>
+    {confirmNode}
   </div>;
 }
 
@@ -332,9 +336,29 @@ function BudgetPage({ data, setData, month, setMonth }) {
       const ok = await confirm({ message:`El mes actual tiene ${current.length} entrada(s). Se reemplazarán. ¿Continuar?`, ok:'Copiar', danger:true });
       if (!ok) return;
     }
+    // Copy budget entries
     const without = data.budget.filter(i=>i.month!==month);
-    setData(d => ({...d, budget:[...without, ...prevItems.map(i=>({...i,id:uid(),month,accountId:null}))]}));
-    toast(`${prevItems.length} entrada(s) copiada(s)`);
+    const newEntries = prevItems.map(i=>({...i, id:uid(), month, accountId:null, executed:false}));
+
+    // Copy CC budget assignments: re-key from prev month → current month
+    const prevSuffix = `__${prev}`;
+    const curSuffix  = `__${month}`;
+    const prevAsgns = (data.ccBudgetAssignments||[]).filter(a => a.ccKey.endsWith(prevSuffix));
+    // Remove any existing assignments for this month, then add migrated ones
+    const otherAsgns = (data.ccBudgetAssignments||[]).filter(a => !a.ccKey.endsWith(curSuffix));
+    const newAsgns = prevAsgns.map(a => ({
+      ...a,
+      id: uid(),
+      ccKey: a.ccKey.replace(prevSuffix, curSuffix),
+      executed: false,
+    }));
+
+    setData(d => ({
+      ...d,
+      budget: [...without, ...newEntries],
+      ccBudgetAssignments: [...otherAsgns, ...newAsgns],
+    }));
+    toast(`${newEntries.length} entrada(s) copiada(s)${newAsgns.length ? ` · ${newAsgns.length} asignación(es) de tarjeta heredada(s)` : ''}`);
   };
 
   const noteText = usM(() => data.budgetNotes?.[month]||'', [data.budgetNotes, month]);
@@ -346,7 +370,6 @@ function BudgetPage({ data, setData, month, setMonth }) {
     </span>);
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Presupuesto" subtitle="Entradas planificadas del mes"
       right={<>
         <MonthPicker month={month} onChange={setMonth}/>
@@ -560,6 +583,7 @@ function BudgetPage({ data, setData, month, setMonth }) {
     <Modal open={modal==='notes'} onClose={()=>setModal(null)} title={`Anotaciones · ${formatMonthLabel(month)}`} size="sm">
       <NotesForm value={noteText} onSave={val=>{setData(d=>({...d,budgetNotes:{...(d.budgetNotes||{}),[month]:val}}));toast('Anotaciones guardadas');setModal(null);}} onClose={()=>setModal(null)}/>
     </Modal>
+    {confirmNode}
   </div>;
 }
 
@@ -780,7 +804,6 @@ function ExpensesPage({ data, setData, month, setMonth }) {
     <span key={cur} style={{marginRight:6}}><span className="ccy-tag">{cur}</span>{fmtNum(val,cur)}</span>);
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Gastos compartidos" subtitle="Gastos planificados y recurrentes"
       right={<>
         <MonthPicker month={month} onChange={setMonth}/>
@@ -900,6 +923,7 @@ function ExpensesPage({ data, setData, month, setMonth }) {
         </div>
       </div>
     </div>}
+    {confirmNode}
   </div>;
 }
 
@@ -960,7 +984,6 @@ function CreditPage({ data, setData, month, setMonth }) {
   const typeChipClass = (t) => t==='installment'?'chip-warn':t==='subscription'?'':t==='single'?'':'';
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Tarjetas de crédito" subtitle="Cuotas, diferidos y suscripciones"
       right={<>
         <MonthPicker month={month} onChange={setMonth}/>
@@ -1083,6 +1106,7 @@ function CreditPage({ data, setData, month, setMonth }) {
         onClose={()=>setModal(null)} onSave={saveItem}
         onDelete={modal&&modal.editItem?()=>delItem(modal.editItem):undefined}/>
     </Modal>
+    {confirmNode}
   </div>;
 }
 
@@ -1702,7 +1726,6 @@ function ConfigPage({ data, setData, theme, setTheme }) {
   };
 
   return <div className="page col-5">
-    {confirmNode}
     <PageHeader title="Configuración" subtitle="Cuentas, categorías y preferencias"/>
 
     {/* Theme */}
@@ -1874,6 +1897,7 @@ function ConfigPage({ data, setData, theme, setTheme }) {
       {modal?.type==='source'&&<SourceModalForm item={modal.item} onClose={()=>setModal(null)}/>}
       {modal?.type==='rates'&&<ExchangeRateForm onClose={()=>setModal(null)}/>}
     </Modal>
+    {confirmNode}
   </div>;
 }
 
